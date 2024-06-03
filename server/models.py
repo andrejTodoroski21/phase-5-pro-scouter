@@ -13,13 +13,14 @@ db = SQLAlchemy(metadata=metadata)
 class User(db.Model):
     __tablename__ = 'users_table'
 
-    id = db.Column(db.Integer, primary_key =True)
-    first_name = db.Column(db.String, nullable = False)
-    last_name = db.Column(db.String, nullable = False)
-    username = db.Column(db.String, nullable = False)
-    _hashed_password = db.Column(db.String, nullable = False)
-    
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String, nullable=False)
+    last_name = db.Column(db.String, nullable=False)
+    username = db.Column(db.String, nullable=False)
+    _hashed_password = db.Column(db.String, nullable=False)
+
     # videos and liked_videos relationship
+    videos = db.relationship('Video', back_populates='uploader', lazy=True)
     liked_videos = db.relationship('Like', back_populates='user', lazy=True)
     recruiter_interactions = db.relationship('UserRecruiter', back_populates='user', lazy=True)
     sent_messages = db.relationship('Message', back_populates='sender', lazy=True)
@@ -30,10 +31,10 @@ class Recruiter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     recruiter_name = db.Column(db.String, nullable=False)
     recruiter_username = db.Column(db.String, nullable=False)
+    _hashed_password = db.Column(db.String, nullable=False)
 
     interactions = db.relationship('UserRecruiter', back_populates='recruiter', lazy=True)
     received_messages = db.relationship('Message', back_populates='receiver', lazy=True)
-
 
 class Video(db.Model):
     __tablename__ = "videos_table"
@@ -43,10 +44,9 @@ class Video(db.Model):
     time_uploaded = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     file_path = db.Column(db.String, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users_table.id'))
-    
+
     uploader = db.relationship('User', back_populates='videos')
     likes = db.relationship('Like', back_populates='video', lazy=True)
-
 
 class Like(db.Model):
     __tablename__ = "likes_table"
@@ -57,7 +57,6 @@ class Like(db.Model):
     user = db.relationship('User', back_populates='liked_videos')
     video = db.relationship('Video', back_populates='likes')
 
-
 class Message(db.Model):
     __tablename__ = 'messages_table'
 
@@ -65,19 +64,19 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
     sender_id = db.Column(db.Integer, db.ForeignKey('users_table.id'))
-    receiver_id = db.Column(db.Integer, db.ForeignKey('recruiters.id'), nullable=False)
-    interaction_id = db.Column(db.Integer, db.ForeignKey('users_recruiters.interaction_id'))
+    receiver_id = db.Column(db.Integer, db.ForeignKey('recruiters_table.id'), nullable=False)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('users_recruiters_table.interaction_id'))
+    
     receiver = db.relationship('Recruiter', back_populates='received_messages')
     sender = db.relationship('User', back_populates='sent_messages')
     interaction = db.relationship('UserRecruiter', back_populates='messages')
 
-
-
 class UserRecruiter(db.Model):
     __tablename__ = 'users_recruiters_table'
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), primary_key=True)
-    recruiter_id = db.Column(db.Integer, db.ForeignKey('recruiters_table.id'), primary_key=True)
+    interaction_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), nullable=False)
+    recruiter_id = db.Column(db.Integer, db.ForeignKey('recruiters_table.id'), nullable=False)
     interaction_type = db.Column(db.String(50), nullable=False)  # e.g., 'view', 'message'
 
     user = db.relationship('User', back_populates='recruiter_interactions')
