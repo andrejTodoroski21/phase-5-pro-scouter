@@ -10,8 +10,10 @@ metadata = MetaData(naming_convention={
 
 db = SQLAlchemy(metadata=metadata)
 
-class User(db.Model):
+class User(db.Model, SerializerMixin):
     __tablename__ = 'users_table'
+
+    serialize_rules = ('-videos.user','-liked_videos.user', 'recruiter_interactions.user', '-sent_messages.sender',)
 
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String, nullable=False)
@@ -25,8 +27,10 @@ class User(db.Model):
     recruiter_interactions = db.relationship('UserRecruiter', back_populates='user', lazy=True)
     sent_messages = db.relationship('Message', back_populates='sender', lazy=True)
 
-class Recruiter(db.Model):
+class Recruiter(db.Model, SerializerMixin):
     __tablename__ = "recruiters_table"
+
+    serialize_rules = ('-interactions.recruiter', '-received_messages.receiver',)
 
     id = db.Column(db.Integer, primary_key=True)
     recruiter_name = db.Column(db.String, nullable=False)
@@ -36,20 +40,24 @@ class Recruiter(db.Model):
     interactions = db.relationship('UserRecruiter', back_populates='recruiter', lazy=True)
     received_messages = db.relationship('Message', back_populates='receiver', lazy=True)
 
-class Video(db.Model):
+class Video(db.Model, SerializerMixin):
     __tablename__ = "videos_table"
+
+    serialize_rules = ('-uploader.videos', '-likes.video',)
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
-    time_uploaded = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+    time_uploaded = db.Column(db.DateTime, server_default=db.func.now())
     file_path = db.Column(db.String, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users_table.id'))
 
     uploader = db.relationship('User', back_populates='videos')
     likes = db.relationship('Like', back_populates='video', lazy=True)
 
-class Like(db.Model):
+class Like(db.Model, SerializerMixin):
     __tablename__ = "likes_table"
+
+    serialize_rules = ('-user.liked_videos', '-video.likes',)
 
     user_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), primary_key=True)
     video_id = db.Column(db.Integer, db.ForeignKey('videos_table.id'), primary_key=True)
@@ -57,8 +65,10 @@ class Like(db.Model):
     user = db.relationship('User', back_populates='liked_videos')
     video = db.relationship('Video', back_populates='likes')
 
-class Message(db.Model):
+class Message(db.Model, SerializerMixin):
     __tablename__ = 'messages_table'
+
+    serialize_rules = ('-sneder.sent_messages', '-receiver.sent_messages', '-interaction.messages',)
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
@@ -71,8 +81,10 @@ class Message(db.Model):
     sender = db.relationship('User', back_populates='sent_messages')
     interaction = db.relationship('UserRecruiter', back_populates='messages')
 
-class UserRecruiter(db.Model):
+class UserRecruiter(db.Model, SerializerMixin):
     __tablename__ = 'users_recruiters_table'
+
+    serialize_rules = ('-user.recruiter_interactions', '-recruiter.interactions', 'messages.interaction', )
 
     interaction_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), nullable=False)
