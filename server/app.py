@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
-from flask import Flask, request, session, jsonify
+from dotenv import load_dotenv
+from flask import Flask, request, session, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -8,13 +9,24 @@ from flask_bcrypt import Bcrypt
 
 from models import db, User, Recruiter, Video, Like, Message, UserRecruiter
 
-app = Flask(__name__)
+load_dotenv()
+
+app = Flask(
+    __name__,
+    static_url_path='',
+    static_folder='../client/dist',
+    template_folder='../client/dist'
+)
+
 app.secret_key = os.environ.get('SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
 CORS(app)
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("index.html")
 
 migrate = Migrate(app, db)
 bycrypt = Bcrypt(app)
@@ -31,7 +43,7 @@ def get_user_by_username(username):
     return user.to_dict(), 200
 
 # user signup
-@app.post('/api/users')
+@app.post('/api/signup')
 def signup():
     try: 
         new_user = User(username=request.json['username'], first_name = request.json['first_name'], last_name = request.json['last_name'])
@@ -45,7 +57,7 @@ def signup():
 @app.post('/api/login')
 def user_login():
     username = request.json['username']
-    password = request.json['_hashed_password']
+    password = request.json['password']
     user = User.query.filter_by(username=username).first()
     if user and bycrypt.check_password_hash(user._hashed_password, password):
         session['user_id'] = user.id

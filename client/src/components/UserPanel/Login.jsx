@@ -1,68 +1,58 @@
-import { useState } from 'react'
-import {useOutletContext} from 'react-router-dom'
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function Login() {
+const Login = () => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  const [user, setUser] = useState('')
-  const [password, setPassword] = useState('')
-  const {setCurrentUser} = useOutletContext()
-  const navigate = useNavigate();
+    const handleLogin = async (event) => {
+        event.preventDefault();
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
+            if (response.ok) {
+                navigate('/');
+            } else {
+                const data = await response.json();
+                setError(data.error || 'Invalid username or password');
+            }
+        } catch (err) {
+            setError('Error logging in');
+        }
+    };
 
-  // SUBMIT EVENT
+    return (
+        <div>
+            <h2>Login</h2>
+            <form onSubmit={handleLogin}>
+                <div>
+                    <label>Username:</label>
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </div>
+                <button type="submit">Login</button>
+                {error && <p>{error}</p>}
+            </form>
+        </div>
+    );
+};
 
-  function handleSubmit(e) {
-    e.preventDefault();
-
-    fetch('/api/login', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'Accept': 'application/json' 
-      },
-      body: JSON.stringify({ user, password })
-    }).then(res => {
-      if (res.ok) {
-        res.json().then(user => {
-          setCurrentUser(user);
-          navigate('/'); 
-        });
-      } else {
-        alert('Invalid username or password');
-      }
-    });
-  }
-
-  // RENDER //
-
-  return (
-    <div>
-
-        <form className='user-form' onSubmit={handleSubmit}>
-
-        <h2>Login</h2>
-
-        <input type="text"
-        onChange={e => setUser(e.target.value)}
-        value={user}
-        placeholder='username'
-        />
-
-        <input type="password"
-        onChange={e => setPassword(e.target.value)}
-        value={password}
-        placeholder='password'
-        />
-
-        <input type="submit"
-        value='Login'
-        />
-
-        </form>
-
-    </div>
-  )
-
-}
-
-export default Login
+export default Login;

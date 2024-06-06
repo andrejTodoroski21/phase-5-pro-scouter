@@ -1,85 +1,81 @@
-import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const Signup = () => {
+    const [username, setUsername] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-function Signup() {
-  const { setCurrentUser } = useOutletContext()
-  // STATE //
+    const handleSignup = async (event) => {
+        event.preventDefault();
+        try {
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username,
+                    first_name: firstName,
+                    last_name: lastName,
+                    _hashed_password: password,
+                }),
+            });
+            if (response.ok) {
+                navigate('/login');
+            } else {
+                const data = await response.json();
+                setError(data.error || 'Error signing up');
+            }
+        } catch (err) {
+            setError('Error signing up');
+        }
+    };
 
-  const [username, setUsername] = useState('')
-  const [_hashed_password, setPassword] = useState('')
-  const [first_name, setFirstName] = useState('')
-  const [last_name, setLastName] = useState('')
-  const navigate = useNavigate();
+    return (
+        <div>
+            <h2>Signup</h2>
+            <form onSubmit={handleSignup}>
+                <div>
+                    <label>Username:</label>
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label>First Name:</label>
+                    <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label>Last Name:</label>
+                    <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </div>
+                <button type="submit">Signup</button>
+                {error && <p>{error}</p>}
+            </form>
+        </div>
+    );
+};
 
-
-  // EVENTS //
-
-  function handleSubmit(e) {
-    e.preventDefault()
-
-    fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ first_name, last_name, username, _hashed_password})
-    })
-    .then(response => {
-      if (response.ok) {
-        response.json()
-        .then( newUser => {
-          setCurrentUser(newUser) 
-          navigate('/');
-        });
-      } else {
-        alert("Signup unsuccessful")
-      }
-    })
-  }
-
-  // RENDER //
-
-  return (
-    <div>
-
-
-    <form className='user-form' onSubmit={handleSubmit}>
-
-      <h2>Signup</h2>
-
-      <input type="text"
-      onChange={e => setUsername(e.target.value)}
-      value={username}
-      placeholder='username'
-      />
-
-      <input type="password"
-      onChange={e => setPassword(e.target.value)}
-      value={_hashed_password}
-      placeholder='password'
-      />
-
-      <input type="text"
-      onChange={e => setFirstName(e.target.value)}
-      value={first_name}
-      placeholder='first name'
-      />
-
-      <input type="text"
-      onChange={e => setLastName(e.target.value)}
-      value={last_name}
-      placeholder='last name'
-      />
-
-      <input type="submit"
-      value='Signup'
-      />
-
-    </form>
-
-      </div>
-  )
-
-}
-
-export default Signup
+export default Signup;

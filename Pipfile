@@ -16,6 +16,8 @@ flask-cors = "*"
 secret-key-generator = "*"
 python-dotenv = "*"
 flask-bcrypt = "*"
+psycopg2-binary = "*"
+gunicorn = "*"
 
 [dev-packages]
 ipdb = "*"
