@@ -1,33 +1,20 @@
-import Signup from './Signup'
-import Login from './Login'
-import UserDetails from './Userdetails'
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import login from './Login';
+import Signup from './Signup';
+import UserDetails from './Userdetails';
 
-function UserPanel({currentUser, setCurrentUser}) {
-
-  // RENDER //
-
-  if (!currentUser) { // render Signup and Login if no currentUser
-
+const UserPanel = () => {
     return (
-        
-        <div className="flex-row">
+        <Router>
+            <Switch>
+                <Route path="/login" component={login} />
+                <Route path="/signup" component={Signup} />
+                <Route path="/userdetails" component={UserDetails} />
+                <Route path="/" component={login} /> {/* Default route */}
+            </Switch>
+        </Router>
+    );
+};
 
-          <Signup setCurrentUser={setCurrentUser} />
-
-          <Login setCurrentUser={setCurrentUser} />
-
-        </div>
-    
-    )
-
-    } else { // render UserDetails if currentUser
-      
-      return (
-        <UserDetails currentUser={currentUser} setCurrentUser={setCurrentUser} />
-      )
-
-    }
-
-}
-
-export default UserPanel
+export default UserPanel;

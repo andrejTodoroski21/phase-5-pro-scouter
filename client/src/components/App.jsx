@@ -1,33 +1,29 @@
-import { Outlet } from 'react-router-dom'
-import React, {useState, useEffect} from 'react'
-import Navbar from './Navbar'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './Navbar';
+import Home from './Home';
+import Login from './UserPanel/Login';
+import Signup from './UserPanel/Signup';
+import UserDetails from './UserPanel/Userdetails';
+import Video from './Video';
+import AddVideo from './AddVideo';
 
-function App() {
+const App = () => {
+    return (
+        <Router>
+            <div>
+                <Navbar />
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/userdetails" element={<UserDetails />} />
+                    <Route path="/videos" element={<Video />} />
+                    <Route path="/add-video" element={<AddVideo />} /> {/* Add this route */}
+                </Routes>
+            </div>
+        </Router>
+    );
+};
 
-  // STATE //
-
-  const [currentUser, setCurrentUser] = useState(null);
-
-  // FETCH SESSION FOR LOGIN
-
-  useEffect(() => {
-    fetch('/api/get-session')
-    .then(response => {
-      if (response.status === 200) {
-        response.json()
-        .then(loggedInUser => setCurrentUser(loggedInUser))
-      }
-    })
-  }, []);
-
-  return (
-    <div>
-
-      <Navbar />
-      <Outlet context={{currentUser, setCurrentUser}}/>
-    </div>
-  )
-
-}
-
-export default App
+export default App;

@@ -1,35 +1,12 @@
-import { Link, useOutletContext } from 'react-router-dom'
+import React from 'react';
 
-function Home () {
-    const{currentUser} =useOutletContext()
-    // const{setCurrentUser} =useOutletContext()
-
-    
-
+const Home = () => {
     return (
+        <div>
+            <h1>Welcome to Our App!</h1>
+            <p>Please sign up or log in to continue.</p>
+        </div>
+    );
+};
 
-    <div>
-       
-            <Link to="/videos"></Link>
-            <p className='icon-text'>Listings</p>
-        
-            <br/>
-
-            {/* <Link to="/profile"></Link>
-            <p className='icon-text'>My Profile</p> */}
-
-            <br/>
-
-            <Link to="/about"></Link>
-            <p className='icon-text' >About</p>
-            
-                    <h3 style={{color: 'white'}}>Welcome, {currentUser ? currentUser.username : 'Guest'}!</h3>
-                
-            </div>
-                
-                
-            
-    )
-}
-
-export default Home
+export default Home;
