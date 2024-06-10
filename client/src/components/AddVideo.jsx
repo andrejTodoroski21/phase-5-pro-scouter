@@ -16,7 +16,7 @@ const AddVideo = () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ title, youtube_link: youtubeLink, user_id: userId })
+                body: JSON.stringify({ title, file_path: youtubeLink, user_id: userId })
             });
 
             if (!response.ok) {
@@ -54,7 +54,7 @@ const AddVideo = () => {
                         required
                     />
                 </div>
-                <button type="submit">Add Video</button>
+                <button class='btn' type="submit">Add Video</button>
             </form>
         </div>
     );
