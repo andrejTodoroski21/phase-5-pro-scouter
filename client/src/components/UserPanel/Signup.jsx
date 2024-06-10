@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ValorantButton from '../ValorantButton';
 
 const Signup = () => {
     const [username, setUsername] = useState('');
@@ -25,7 +26,7 @@ const Signup = () => {
                 }),
             });
             if (response.ok) {
-                navigate('/login');
+                navigate('/');
             } else {
                 const data = await response.json();
                 setError(data.error || 'Error signing up');
@@ -71,7 +72,7 @@ const Signup = () => {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </div>
-                <button type="submit">Signup</button>
+                <ValorantButton type='submit'>Sign Up</ValorantButton>
                 {error && <p>{error}</p>}
             </form>
         </div>
