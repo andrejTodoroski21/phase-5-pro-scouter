@@ -73,8 +73,8 @@ class Message(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
-    sender_id = db.Column(db.Integer, db.ForeignKey('users_table.id'))
-    receiver_id = db.Column(db.Integer, db.ForeignKey('recruiters_table.id'), nullable=False)
+    user_message = db.Column(db.Integer, db.ForeignKey('users_table.id'))
+    recruiter_message = db.Column(db.Integer, db.ForeignKey('recruiters_table.id'), nullable=False)
     interaction_id = db.Column(db.Integer, db.ForeignKey('users_recruiters_table.interaction_id'))
     
     receiver = db.relationship('Recruiter', back_populates='received_messages')

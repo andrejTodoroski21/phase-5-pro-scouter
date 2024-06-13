@@ -1,7 +1,6 @@
 // src/components/Video.jsx
 import React, { useEffect, useState } from 'react';
 import YouTube from 'react-youtube';
-import ValorantButton from './ValorantButton';
 const Video = () => {
     const [videos, setVideos] = useState([]);
     const [error, setError] = useState(null);
