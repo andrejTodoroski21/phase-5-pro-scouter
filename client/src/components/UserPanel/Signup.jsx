@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ValorantButton from '../ValorantButton';
+
 
 const Signup = () => {
     const [username, setUsername] = useState('');
@@ -37,45 +37,68 @@ const Signup = () => {
     };
 
     return (
-        <div>
-            <h2>Signup</h2>
-            <form onSubmit={handleSignup}>
+        <>
+        <main>
+
+        
+        <div className='create-account-div'>
+        <h2 className='create-account'>CREATE AN ACCOUNT</h2>
+        </div>
+
+            <div className='signup-container'>
+                <form className='signup-form' onSubmit={handleSignup}>
+                    <div className = 'form-card'>
+                <h5 className = 'signup text-center'>Sign Up</h5>
+                                <div className='ivhuok field'>
+                                    <input
+                                        className='username-input'
+                                        name='username'
+                                        placeholder='USERNAME'
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        />
+                                </div>
                 <div>
-                    <label>Username:</label>
                     <input
                         type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label>First Name:</label>
-                    <input
-                        type="text"
+                        className='first-name'
+                        placeholder='FIRST NAME'
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                    />
+                        />
                 </div>
                 <div>
-                    <label>Last Name:</label>
                     <input
                         type="text"
+                        className='last-name'
+                        placeholder='LAST NAME'
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                    />
+                        />
                 </div>
                 <div>
-                    <label>Password:</label>
                     <input
                         type="password"
+                        className='password'
+                        placeholder='PASSWORD'
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                    />
+                        />
                 </div>
-                <ValorantButton type='submit'>Sign Up</ValorantButton>
+                <br></br>
+                
+                <button className='valorant-button' type='submit'>Sign Up</button>
+                <br></br>
+                <a href='/login'>Already have an account?</a>
+                
                 {error && <p>{error}</p>}
-            </form>
-        </div>
+                </div>
+                </form>
+            </div>
+            </main>
+                        </>
+
     );
 };
 

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import os
 from dotenv import load_dotenv
-from flask import Flask, request, session, jsonify, render_template
+from flask import Flask, request, session, jsonify, render_template, redirect
+from flask_socketio import SocketIO, emit, join_room, leave_room, send
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+import random
 from flask_bcrypt import Bcrypt
 
 from models import db, User, Recruiter, Video, Like, Message, UserRecruiter
@@ -17,6 +19,8 @@ app = Flask(
     static_folder='../client/dist',
     template_folder='../client/dist'
 )
+CORS(app,resources={r"/*":{"origins":"*"}})
+socketio = SocketIO(app)
 
 app.secret_key = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URL')
@@ -33,6 +37,37 @@ bycrypt = Bcrypt(app)
 
 db.init_app(app)
 
+@app.route('/api/messages', methods=['POST'])
+def send_message():
+    data = request.json
+    user_id = data.get('user_id')
+    recruiter_id = data.get('recruiter_id')
+    content = data.get('content')
+
+    message = Message(
+        user_message=user_id,
+        recruiter_message=recruiter_id,
+        content=content
+    )
+    db.session.add(message)
+    db.session.commit()
+    socketio.emit('message', message.to_dict())
+    return jsonify(message.to_dict()), 201
+
+@socketio.on('message')
+def handle_message(data):
+    user_id = data['user_id']
+    recruiter_id = data['recruiter_id']
+    content = data['content']
+    message = Message(
+        user_message=user_id,
+        recruiter_message=recruiter_id,
+        content=content
+    )
+    db.session.add(message)
+    db.session.commit()
+    emit('message', message.to_dict(), broadcast=True)
+    
 @app.get('/api/users')
 def get_all_users():
     return [u.to_dict() for u in User.query.all()], 200
@@ -80,12 +115,15 @@ def get_session_user():
 def create_recruiter():
     try:
         new_recruiter = Recruiter(recruiter_username = request.json['recruiter_username'], recruiter_name = request.json['recruiter_name'])
-        new_recruiter._hashed_password = bycrypt.generate_password_hash(request.json['password']).decode('utf-8')
+        new_recruiter._hashed_password = bycrypt.generate_password_hash(request.json['_hashed_password']).decode('utf-8')
         db.session.add(new_recruiter)
         db.session.commit()
-        return new_recruiter
+        return new_recruiter.to_dict()
     except Exception as e:
         return {'error': str(e)}, 400
+@app.get('/api/recruiters')
+def get_all_recruiters():
+    return [r.to_dict() for r in Recruiter.query.all()], 200
 
 # checks the session to see if recruiter is logged in
 @app.get('/api/get-session-recruiter')
@@ -132,9 +170,7 @@ def delete_video(id):
         return {'error': str(e)}, 406
 
 
-
-
-            
+# @app.post('/api/message')
 
 
 # write your routes here! 
@@ -142,4 +178,4 @@ def delete_video(id):
 
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+    socketio.run(app, port=5555, debug=True)
