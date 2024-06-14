@@ -1,39 +1,32 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 
 const Signup = () => {
+    const { setCurrentUser} = useOutletContext();
     const [username, setUsername] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [first_name, setFirstName] = useState('');
+    const [last_name, setLastName] = useState('');
+    const [_hashed_password, setPassword] = useState('');
     const navigate = useNavigate();
 
     const handleSignup = async (event) => {
         event.preventDefault();
-        try {
-            const response = await fetch('/api/signup', {
+          fetch('/api/signup', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username,
-                    first_name: firstName,
-                    last_name: lastName,
-                    _hashed_password: password,
-                }),
-            });
-            if (response.ok) {
-                navigate('/');
-            } else {
-                const data = await response.json();
-                setError(data.error || 'Error signing up');
-            }
-        } catch (err) {
-            setError('Error signing up');
-        }
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+                body: JSON.stringify({username, first_name, last_name, _hashed_password}),
+            }).then(response => {
+                if (response.ok) {
+                    response.json()
+                    .then(new_user => {
+                        setCurrentUser(new_user)
+                        navigate('/videos');
+                    });
+                } else {
+                    alert('signup unsuccessful')
+                }
+            })
     };
 
     return (
@@ -64,7 +57,7 @@ const Signup = () => {
                         type="text"
                         className='first-name'
                         placeholder='FIRST NAME'
-                        value={firstName}
+                        value={first_name}
                         onChange={(e) => setFirstName(e.target.value)}
                         />
                 </div>
@@ -73,7 +66,7 @@ const Signup = () => {
                         type="text"
                         className='last-name'
                         placeholder='LAST NAME'
-                        value={lastName}
+                        value={last_name}
                         onChange={(e) => setLastName(e.target.value)}
                         />
                 </div>
@@ -82,7 +75,7 @@ const Signup = () => {
                         type="password"
                         className='password'
                         placeholder='PASSWORD'
-                        value={password}
+                        value={_hashed_password}
                         onChange={(e) => setPassword(e.target.value)}
                         />
                 </div>
@@ -91,8 +84,6 @@ const Signup = () => {
                 <button className='valorant-button' type='submit'>Sign Up</button>
                 <br></br>
                 <a href='/login'>Already have an account?</a>
-                
-                {error && <p>{error}</p>}
                 </div>
                 </form>
             </div>

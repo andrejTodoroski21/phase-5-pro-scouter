@@ -1,15 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, BrowserRouter } from 'react-router-dom';
 
 const Navbar = () => {
     return (
+        <BrowserRouter>
+        
         <header>
 
         <nav>
             <ul className='nav-links'>
-                <li>
-                    <Link to="/">Home</Link>
-                </li>
                 <li>
                     <Link to="/signup">Signup</Link><a> / </a><Link to="/login">Login</Link>
                 </li>
@@ -22,10 +21,15 @@ const Navbar = () => {
                 <li>
                     <Link to="/add-video">Add Video</Link>
                 </li>
+                <li>
+                    <Link to="/messages">Messages</Link>
+                </li>
             </ul>
         </nav>
         </header>
+        </BrowserRouter>
     );
 };
 
 export default Navbar;
+

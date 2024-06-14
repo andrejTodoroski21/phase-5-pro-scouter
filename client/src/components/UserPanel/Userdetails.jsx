@@ -1,43 +1,18 @@
-import React, { useEffect, useState } from 'react';
+function UserDetails({currentUser, setCurrentUser}) {
 
-const UserDetails = () => {
-    const [user, setUser] = useState(null);
-    const [error, setError] = useState('');
-
-    useEffect(() => {
-        const fetchUserDetails = async () => {
-            try {
-                const response = await fetch('/api/userdetails');
-                if (response.ok) {
-                    const data = await response.json();
-                    setUser(data);
-                } else {
-                    setError('Error fetching user details');
-                }
-            } catch (err) {
-                setError('Error fetching user details');
-            }
-        };
-
-        fetchUserDetails();
-    }, []);
-
-    if (error) {
-        return <p>{error}</p>;
+    function handleLogout() {
+      setCurrentUser(null)
+      fetch('/api/logout', { method: 'DELETE' })
     }
-
-    if (!user) {
-        return <p>Loading...</p>;
-    }
-
-    return (
-        <div>
-            <h2>User Details</h2>
-            <p>Username: {user.username}</p>
-            <p>First Name: {user.first_name}</p>
-            <p>Last Name: {user.last_name}</p>
+  
+      return (
+        <div className='user-details'>
+          <h2>Welcome {currentUser.username}!</h2>
+          <button onClick={handleLogout}>Logout</button>
         </div>
-    );
-};
-
-export default UserDetails;
+      )
+    
+    }
+    
+    export default UserDetails
+    
