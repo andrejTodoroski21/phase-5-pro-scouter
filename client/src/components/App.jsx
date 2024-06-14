@@ -1,28 +1,32 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './Navbar';
-import Home from './Home';
-import Login from './UserPanel/Login';
-import Signup from './UserPanel/Signup';
-import UserDetails from './UserPanel/Userdetails';
-import Video from './Video';
-import AddVideo from './AddVideo';
+import { Outlet } from 'react-router-dom'
+import React, {useState, useEffect} from 'react'
+// import Navbar from './Navbar.jsx'
 
 const App = () => {
+    const [currentUser, setCurrentUser] = useState(null);
+     // STATE //
+     
+    useEffect(() => {
+        fetch('/api/get-session-user')
+        .then(response => {
+          if (response.status === 200) {
+            response.json()
+            .then(loggedInUser => setCurrentUser(loggedInUser))
+            console.log("this works?")
+          }
+        })
+    }, []);
+
+
     return (
-        <Router>
             <div>
-                <Navbar />
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/userdetails" element={<UserDetails />} />
-                    <Route path="/videos" element={<Video />} />
-                    <Route path="/add-video" element={<AddVideo />} /> 
-                </Routes>
+                {/* <Navbar/> */}
+                <div>
+                    <Outlet context={{currentUser, setCurrentUser}}/>
+                    hello welcome 
+                </div>
             </div>
-        </Router>
+
     );
 };
 

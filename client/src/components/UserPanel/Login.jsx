@@ -1,31 +1,33 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const {setCurrentUser} = useOutletContext()
+
     const navigate = useNavigate();
 
     const handleLogin = async (event) => {
         event.preventDefault();
-        try {
-            const response = await fetch('/api/login', {
+        
+            fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ username, password }),
+            }).then(response =>{
+                if (response.ok) {
+                    response.json().then(username=>{
+                        setCurrentUser(username);
+                        navigate('/videos');
+                    })
+                } else {
+                    alert('Invalid username or password')
+                }
             });
-            if (response.ok) {
-                navigate('/');
-            } else {
-                const data = await response.json();
-                setError(data.error || 'Invalid username or password');
-            }
-        } catch (err) {
-            setError('Error logging in');
-        }
     };
 
     return (
@@ -49,7 +51,7 @@ const Login = () => {
                     />
                 </div>
                 <button type="submit">Login</button>
-                {error && <p>{error}</p>}
+                
             </form>
         </div>
     );

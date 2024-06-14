@@ -67,7 +67,11 @@ def handle_message(data):
     db.session.add(message)
     db.session.commit()
     emit('message', message.to_dict(), broadcast=True)
-    
+
+@app.get('/api/messages')
+def get_messages():
+    return [m.to_dict() for m in Message.query.all()], 200
+
 @app.get('/api/users')
 def get_all_users():
     return [u.to_dict() for u in User.query.all()], 200
@@ -103,12 +107,17 @@ def user_login():
 # check to see if user is logged in
 @app.get('/api/get-session-user')
 def get_session_user():
-    user_id = session.get('user_id')
+    user_id = session.get('id')
     if user_id:
         user = User.query.get(user_id), 200
         if user:
             return user.to_dict(),200
-    return {'error': 'User not found'}, 404
+    return {}, 404
+
+@app.delete('/api/logout')
+def logout():
+    session.pop('user_id')  # Remove the user ID from the session on logout
+    return {}, 204
 
 # recruiter signup
 @app.post('/api/recruiters')
@@ -121,6 +130,7 @@ def create_recruiter():
         return new_recruiter.to_dict()
     except Exception as e:
         return {'error': str(e)}, 400
+
 @app.get('/api/recruiters')
 def get_all_recruiters():
     return [r.to_dict() for r in Recruiter.query.all()], 200
@@ -169,12 +179,6 @@ def delete_video(id):
     except Exception as e:
         return {'error': str(e)}, 406
 
-
-# @app.post('/api/message')
-
-
-# write your routes here! 
-# all routes should start with '/api' to account for the proxy
 
 
 if __name__ == '__main__':
