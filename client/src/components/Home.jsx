@@ -4,14 +4,15 @@ import { useOutletContext} from 'react-router-dom';
 
 
 function Home(){
-    const{currentUser} = useOutletContext()
-    const{setCurrentUser} = useOutletContext()
+    const { currentUser } = useOutletContext()
+    const { setCurrentUser } = useOutletContext()
 
     function handleLogout() {
         setCurrentUser(null)
         fetch('/api/logout', { method: 'DELETE' })
     
     }
+
 return (
     <div>
         <div>

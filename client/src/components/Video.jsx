@@ -26,13 +26,12 @@ const Video = () => {
 
     return (
         <div>
-            <h1>Video</h1>
-            {error && <p>{error}</p>}
-            <div>
+            <h1>Browse Videos</h1>
+            <div className='video-container'>
                 {videos.map((video) => (
                     <div key={video.id}>
-                        <YouTube videoId={video.file_path} />
                         <p>{video.title}</p>
+                        <YouTube videoId={video.file_path} />
                     </div>
                 ))}
             </div>

@@ -107,9 +107,9 @@ def user_login():
 # check to see if user is logged in
 @app.get('/api/get-session-user')
 def get_session_user():
-    user_id = session.get('id')
+    user_id = session.get('user_id')
     if user_id:
-        user = User.query.get(user_id), 200
+        user = User.query.get(user_id)
         if user:
             return user.to_dict(),200
     return {}, 404
@@ -131,19 +131,36 @@ def create_recruiter():
     except Exception as e:
         return {'error': str(e)}, 400
 
+@app.post('/api/recruiters-login')
+def recruiter_login():
+    recruiter_username = request.json['recruiter_username']
+    password = request.json['password']
+    recruiter = Recruiter.query.filter_by(recruiter_username=recruiter_username).first()
+    if recruiter and bycrypt.check_password_hash(recruiter._hashed_password, password):
+        session['recruiter_id'] = recruiter.id
+        return recruiter.to_dict(), 201
+    else:
+        return {'error': 'Invalid username or password'}, 401
+
 @app.get('/api/recruiters')
 def get_all_recruiters():
     return [r.to_dict() for r in Recruiter.query.all()], 200
+
+#RECRUITER LOGOUT
+@app.delete('/api/recruiters')
+def recruiter_logout():
+    session.pop('recruiter_id')
+    return {}, 204
 
 # checks the session to see if recruiter is logged in
 @app.get('/api/get-session-recruiter')
 def get_session_recruiter():
     recruiter_id = session.get('recruiter_id')
     if recruiter_id:
-        recruiter = Recruiter.query.get(user_id), 200
+        recruiter = Recruiter.query.get(recruiter_id)
         if recruiter:
             return recruiter.to_dict(), 200
-    return {'error':str(e)}, 400
+    return {}, 400
 
 # get all videos
 @app.get('/api/videos')

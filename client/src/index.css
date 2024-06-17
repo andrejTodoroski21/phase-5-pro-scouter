@@ -1,103 +1,4 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-.signup-container {
-  background: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  padding-bottom: 10px;
-}
-.username-input, .first-name, .last-name, .password {
-  background-color: rgb(243, 243, 246);
-  color: rgb(10,10,10);
-  padding: 11px 8px 8px;
-  width: 500px;
-  height: 40px;
-  border: none;
-  outline: none;
-  padding-left: 10px;
-  text-transform: uppercase;
-  font-family: "FF Mark W05", sans-serif;
-  margin: 20px;
-}
-.password:hover input{
-  color:black;
-}
-
-.signup{
-  text-align: center;
-}
-
-.valorant-button{
-  display: flex;
-  justify-content: center;
-  background-color: #FF4655;
-  color: #FFFFFF;
-  border: 2px solid #FF4655;
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  text-transform: uppercase;
-  cursor: pointer;
-  outline: none;
-  position: relative;
-}
-/* .valorant-button {
-  display: felx;
-  justify-content: center;
-  background-color: #FF4655; 
-  color: #FFFFFF;
-  border: 2px solid #FF4655;
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  text-transform: uppercase;
-  cursor: pointer;
-  outline: none;
-  position: relative;
-  overflow: hidden;
-  transition: background-color 0.3s, transform 0.3s;
-  font-family: 'Valorant', sans-serif; 
-  border-radius: 4px; 
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.valorant-button:hover {
-  background-color: #E63946; 
-  transform: scale(1.05); 
-}
-
-.valorant-button:active {
-  background-color: #CC3343;
-  transform: scale(0.98);
-}
-
-.valorant-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 2px solid transparent;
-  border-radius: 4px;
-  transition: border-color 0.3s;
-}
-
-.valorant-button:hover::before {
-  border-color: #FFFFFF;
-}
-
-
-
-
-
-*/ 
-body {
+.bg-image, .login-bg-image {
   background-image: url(https://freight.cargo.site/w/4096/q/75/i/7212fd19194df171a4b429ef173b7fbd494cd8086f175e95bfb4de1d547a3eed/FGwR9c-XsAwZq-e.jpeg);
   background-repeat: no-repeat;
   background-position: center center;
@@ -106,6 +7,14 @@ body {
   height: 100vh;
   margin: 0;
   font-family: 'FF Mark W05', sans-serif;
+  content:"";
+	position:fixed;
+	left:0;
+	top:0;
+	right:0;
+	bottom:0;
+	z-index:-1;
+	display:block;
 }
 main{
   grid-template-columns: repeat(12, 1fr);
@@ -129,8 +38,7 @@ main{
   text-align: inherit;
   color: rgb(255, 255, 255);
 }
-
-.signup-container {
+.signup-container, .login-container {
   margin:0;
   display: flex;
   justify-content: center;
@@ -139,26 +47,24 @@ main{
   height: 100%;
   padding: 32px;
 }
-
-.signup-form {
+.signup-form, .login-form {
   background-color: #ffffff;
   padding: 40px;
   width: 300px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-
-
 }
-
 .signup-form h5 {
   margin-bottom: 20px;
   color: #000000; /* White text */
   text-align: center;
   font-size: 24px;
 }
-
-.signup-form input {
+.login-text-center{
+  text-align: center;
+}
+.signup-form input, .login-form input {
   width: 100%;
   align-items: center;
   padding: 15px;
@@ -201,14 +107,55 @@ a{
   display: flex;
   justify-content: center;
 }
-
-
-
-
- 
-
-
-
-
-
-
+.video-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.message-container {
+  width: 50%;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 10px;
+}
+.messages {
+  height: 400px;
+  overflow-y: scroll;
+  border: 1px solid #eee;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+.message {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+}
+.message.sent {
+  background-color: #d1e7dd;
+  text-align: right;
+}
+.message.received {
+  background-color: #f8d7da;
+  text-align: left;
+}
+.message-input {
+  display: flex;
+  gap: 10px;
+}
+.message-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+.message-input button {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #007bff;
+  color: white;
+}
+.no-display{
+  display: none;
+}
