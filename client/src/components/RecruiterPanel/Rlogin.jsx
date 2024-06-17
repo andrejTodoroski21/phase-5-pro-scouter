@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
-const Login = () => {
-    const [username, setUsername] = useState('');
+const RecruiterLogin = () => {
+    const [recruiter_username, setRecruiterUsername] = useState('');
     const [password, setPassword] = useState('');
-    const {setCurrentUser} = useOutletContext()
+    const {setCurrentRecruiter} = useOutletContext()
 
     const navigate = useNavigate();
 
-    const handleLogin = async (event) => {
+    const handleRecruiterLogin = async (event) => {
         event.preventDefault();
         
-            fetch('/api/login', {
+            fetch('/api/recruiters-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ recruiter_username, password }),
             }).then(response =>{
                 if (response.ok) {
-                    response.json().then(username=>{
-                        setCurrentUser(username);
+                    response.json().then(recruiter_username=>{
+                        setCurrentRecruiter(recruiter_username);
                         navigate('/videos');
                     })
                 } else {
@@ -33,15 +33,15 @@ const Login = () => {
     return (
         <div className='login-bg-image'>
             <div className='login-container'>
-                    <form className='login-form' onSubmit={handleLogin}>
+                    <form className='login-form' onSubmit={handleRecruiterLogin}>
                     <div className='login-card'>
                         <h3 className='login-text-center'>Login</h3>
                         <div>
                             <input
                             type="text"
-                            value={username}
+                            value={recruiter_username}
                             placeholder='USERNAME'
-                            onChange={(e) => setUsername(e.target.value)}
+                            onChange={(e) => setRecruiterUsername(e.target.value)}
                             />
                         </div>
                     <div>
@@ -61,4 +61,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default RecruiterLogin;

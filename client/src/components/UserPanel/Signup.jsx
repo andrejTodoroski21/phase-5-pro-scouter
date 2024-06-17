@@ -30,9 +30,11 @@ const Signup = () => {
     };
 
     return (
-        <>
-        <main>
+    <>
+        <main >
+        <body className='bg-image'>
 
+           
         
         <div className='create-account-div'>
         <h2 className='create-account'>CREATE AN ACCOUNT</h2>
@@ -87,8 +89,9 @@ const Signup = () => {
                 </div>
                 </form>
             </div>
+            </body>
             </main>
-                        </>
+    </>
 
     );
 };

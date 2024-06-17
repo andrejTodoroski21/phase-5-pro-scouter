@@ -1,35 +1,27 @@
-import React from 'react';
-import { Link, BrowserRouter } from 'react-router-dom';
+import { Link } from 'react-router-dom'
 
-const Navbar = () => {
+function Navbar () {
+
     return (
-        <BrowserRouter>
-        
-        <header>
+        <div>
+            <Link className='navbar' to="/">Home</Link>
+            &nbsp; &nbsp;
+            <Link className='navbar' to="/videos">Videos</Link>
+            &nbsp; &nbsp;
+            <Link className='navbar' to="/profile">Profile</Link>
+            &nbsp; &nbsp;
+            <Link className='navbar' to="/about">About</Link>
+            &nbsp; &nbsp;
+            <Link className='navbar' to="/add-video">Add Video</Link>
+            &nbsp; &nbsp;
+            <Link className='navbar' to="/login">Login</Link>
+            &nbsp; &nbsp;
+            <Link className='navbar' to="/signup">Sign Up</Link>
+            &nbsp; &nbsp;
+            <Link className='navbar' to="/messages">Messages</Link>
+            
+        </div>
+    )
+}
 
-        <nav>
-            <ul className='nav-links'>
-                <li>
-                    <Link to="/signup">Signup</Link><a> / </a><Link to="/login">Login</Link>
-                </li>
-                <li>
-                    <Link to="/userdetails">User Details</Link>
-                </li>
-                <li>
-                    <Link to="/videos">Videos</Link>
-                </li>
-                <li>
-                    <Link to="/add-video">Add Video</Link>
-                </li>
-                <li>
-                    <Link to="/messages">Messages</Link>
-                </li>
-            </ul>
-        </nav>
-        </header>
-        </BrowserRouter>
-    );
-};
-
-export default Navbar;
-
+export default Navbar
