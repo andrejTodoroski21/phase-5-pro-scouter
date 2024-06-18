@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import React, {useState, useEffect} from 'react'
-// import Navbar from '../Navbar.jsx'
+import Navbar from '../Navbar.jsx'
+import Footer from './Footer.jsx';
 
 const App = () => {
     const [currentUser, setCurrentUser] = useState(null);
@@ -32,13 +33,13 @@ const App = () => {
 
     return (
             <div>
-                {/* <Navbar/> */}
+                {/* <Navbar className='navbar'/> */}
                 <div>
                     <Outlet context={{currentUser, setCurrentUser, currentRecruiter, setCurrentRecruiter}}/>
                 </div>
-                <div className='no-display'>
+                <Footer/>
                 </div>
-            </div>
+          
 
     );
 };

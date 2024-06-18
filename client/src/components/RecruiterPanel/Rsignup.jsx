@@ -133,7 +133,7 @@ const Signup = () => {
                 <div className='signup-container'>
                     <form className='signup-form' onSubmit={handleRecruiterSignup}>
                         <div className='form-card'>
-                            <h5 className='signup text-center'>Sign Up</h5>
+                            <h5 className='signup text-center'>Recruiter Sign Up</h5>
                             <div className='ivhuok field'>
                                 <input
                                     className='username-input'
