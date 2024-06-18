@@ -39,7 +39,7 @@ const App = () => {
                 </div>
                 <Footer/>
                 </div>
-          
+            
 
     );
 };

@@ -1,3 +1,22 @@
+body{
+  margin: 0;
+  font-family: 'Mark Pro', Arial, sans-serif;
+}
+html, h1, h2, h3, h4, h5, h6{
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  /* font-size: 100%; */
+  vertical-align: baseline;
+  background: transparent;
+}
+::selection{
+  color: #ffffff;
+  background: #d1363a;
+  text-shadow: none;
+}
+
 .bg-image, .login-bg-image {
   background-image: url(https://freight.cargo.site/w/4096/q/75/i/7212fd19194df171a4b429ef173b7fbd494cd8086f175e95bfb4de1d547a3eed/FGwR9c-XsAwZq-e.jpeg);
   background-repeat: no-repeat;
@@ -8,7 +27,7 @@
   margin: 0;
   font-family: 'FF Mark W05', sans-serif;
   content:"";
-	position:fixed;
+	/* position:fixed; */
 	left:0;
 	top:0;
 	right:0;
@@ -156,74 +175,52 @@ a{
   background-color: #007bff;
   color: white;
 }
-.no-display{
-  display: none;
+.footer-container{
+  overflow: hidden;
+  background: black;
+  display: flex;
+  justify-content: space-evenly;
+  padding-bottom: 20px;
 }
-* {
-  box-sizing: border-box;
+.footer-links{
+  padding-right: 8%;
+  width: auto;
+  float: left;
+  padding-left: 40px;
+  padding-right: 135px;
+  color: #000000;
+  font-family: Source Sans Pro, sans-serif;
+  font-size: 12px;
+  line-height: 15px;
+  color : white;
 }
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
+.footer-container h5{
+    text-align: center;
+    text-transform: uppercase;
 }
-
-/* Style the header */
-.header {
-  grid-area: header;
-  background-color: #f1f1f1;
-  padding: 30px;
-  text-align: center;
-  font-size: 35px;
+.video-title{
+  font-size: x-large;
+  text-transform: capitalize;
 }
-
-/* The grid container */
-.grid-container {
-  display: grid;
-  grid-template-areas: 
-    'header header header header header header' 
-    'left left middle middle right right' 
-    'footer footer footer footer footer footer';
-  /* grid-column-gap: 10px; - if you want gap between the columns */
-} 
-
-.left,
-.middle,
-.right {
-  padding: 10px;
-  height: 300px; /* Should be removed. Only for demonstration */
-}
-
-/* Style the left column */
-.left {
-  grid-area: left;
-}
-
-/* Style the middle column */
-.middle {
-  grid-area: middle;
-}
-
-/* Style the right column */
-.right {
-  grid-area: right;
-}
-
-/* Style the footer */
-.footer {
-  grid-area: footer;
-  background-color: #f1f1f1;
-  padding: 10px;
+.browse{
   text-align: center;
 }
-
-/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
-@media (max-width: 600px) {
-  .grid-container  {
-    grid-template-areas: 
-      'header header header header header header' 
-      'left left left left left left' 
-      'middle middle middle middle middle middle' 
-      'right right right right right right' 
-      'footer footer footer footer footer footer';
-  }
+.video-container{
+  padding-bottom: 40px;
+  background: white;
+  background-image: url(https://s3-eu-central-1.amazonaws.com/www-staging.esports.com/WP%20Media%20Folder%20-%20esports-com//var/app/current/web/app/uploads/2021/03/Riot-might-be-changing-up-EU-VCT-format.jpg);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  background-size: cover;
+  margin : 0
+  /* border: #000000; */
+}
+.videos-bg-image{
+ background-image: url(https://s3-eu-central-1.amazonaws.com/www-staging.esports.com/WP%20Media%20Folder%20-%20esports-com//var/app/current/web/app/uploads/2021/03/Riot-might-be-changing-up-EU-VCT-format.jpg);
+ background-repeat: no-repeat;
+ background-position: center center;
+ background-attachment: fixed;
+ background-size: cover;
+ margin: 0;
 }
