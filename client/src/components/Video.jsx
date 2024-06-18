@@ -44,18 +44,21 @@ const Video = () => {
     
 
     return (
+        <body className='videos-bg-image'>
+
         <div>
-            <h1>Browse Videos</h1>
+            <h1 className='browse'>Browse Videos</h1>
             <div className='video-container'>
                 {videos.map((video) => (
                     <div key={video.id}>
-                        <p>{video.title}</p>
                         <YouTube videoId={video.file_path} />
+                        <p className='video-title'>{video.title}</p>
                         <button onClick={()=>deleteVideos(video.id)}>Delete</button>
                     </div>
                 ))}
             </div>
         </div>
+                </body>
     );
 };
 
