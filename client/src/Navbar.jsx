@@ -4,6 +4,7 @@ function Navbar () {
 
     return (
         <div>
+            
             <Link className='navbar' to="/">Home</Link>
             &nbsp; &nbsp;
             <Link className='navbar' to="/videos">Videos</Link>

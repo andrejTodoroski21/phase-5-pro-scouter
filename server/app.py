@@ -179,22 +179,26 @@ def create_video():
     except Exception as e:
         return {'error':str(e)}, 400
 
-# delete video by id, also checks to see if user is authorized to delete the video
+
 @app.delete('/api/videos/<int:id>')
 def delete_video(id):
     try:
         video = Video.query.get(id)
         if video:
-            if video.id == session.get('user_id'):
+            if video.user_id == session.get('user_id'):
                 db.session.delete(video)
                 db.session.commit()
-                return {}, 200
+                return {'message': 'Video deleted successfully'}, 200
             else:
                 return {'error': 'You are not authorized to delete this video'}, 401
         else:
             return {'error': 'Video not found'}, 404
     except Exception as e:
-        return {'error': str(e)}, 406
+        return {'error': str(e)}, 500
+
+
+
+
 
 
 

@@ -24,6 +24,25 @@ const Video = () => {
         }
     };
 
+    const deleteVideos =(videoId)=>{
+        fetch(`/api/videos/${videoId}`, {
+            method: 'DELETE'
+        })
+        .then(response=>{
+            if(response.ok){
+                setVideos(videos.filter(video=> video.id !== videoId));
+            }else{
+                alert("Failed to delete video")
+            }
+        })
+        .catch(error=>{
+            console.error('Error deleting video:', error);
+            alert("Error deleting video");
+        });
+        
+    }
+    
+
     return (
         <div>
             <h1>Browse Videos</h1>
@@ -32,6 +51,7 @@ const Video = () => {
                     <div key={video.id}>
                         <p>{video.title}</p>
                         <YouTube videoId={video.file_path} />
+                        <button onClick={()=>deleteVideos(video.id)}>Delete</button>
                     </div>
                 ))}
             </div>

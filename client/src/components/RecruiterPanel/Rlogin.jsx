@@ -35,7 +35,7 @@ const RecruiterLogin = () => {
             <div className='login-container'>
                     <form className='login-form' onSubmit={handleRecruiterLogin}>
                     <div className='login-card'>
-                        <h3 className='login-text-center'>Login</h3>
+                        <h3 className='login-text-center'>Recruiter Login</h3>
                         <div>
                             <input
                             type="text"

@@ -2,8 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import Home from './components/Home.jsx'
 import Video from './components/Video.jsx'
-// import Profile from './components/Profile.jsx'
-// import About from './components/About.jsx'
+import Profile from './components/Profile.jsx'
+import About from './components/About.jsx'
 import Login from './components/UserPanel/Login.jsx'
 import Signup from './components/UserPanel/Signup.jsx'
 import AddVideo from './components/AddVideo.jsx'
@@ -30,14 +30,14 @@ const routes = [
         path: "videos",
         element: <Video />
       },
-      // {
-      //   path: "profile",
-      //   element: <Profile />
-      // },
-      // {
-      //   path: "about",
-      //   element: <About />
-      // },
+      {
+        path: "profile",
+        element: <Profile />
+      },
+      {
+        path: "about",
+        element: <About />
+      },
       {
         path: "login",
         element: <Login />
