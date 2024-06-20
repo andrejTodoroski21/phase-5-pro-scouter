@@ -38,35 +38,29 @@ bycrypt = Bcrypt(app)
 db.init_app(app)
 
 @app.route('/api/messages', methods=['POST'])
-def send_message():
+def create_message():
     data = request.json
-    user_id = data.get('user_id')
-    recruiter_id = data.get('recruiter_id')
     content = data.get('content')
+    user_message = data.get('user_message')
+    recruiter_message = data.get('recruiter_message')
+    interaction_id = data.get('interaction_id')
 
-    message = Message(
-        user_message=user_id,
-        recruiter_message=recruiter_id,
-        content=content
-    )
-    db.session.add(message)
-    db.session.commit()
-    socketio.emit('message', message.to_dict())
-    return jsonify(message.to_dict()), 201
+    if not content or not user_message or not recruiter_message or not interaction_id:
+        return jsonify({'error': 'Missing required fields'}), 400
 
-@socketio.on('message')
-def handle_message(data):
-    user_id = data['user_id']
-    recruiter_id = data['recruiter_id']
-    content = data['content']
-    message = Message(
-        user_message=user_id,
-        recruiter_message=recruiter_id,
-        content=content
+    new_message = Message(
+        content=content,
+        user_message=user_message,
+        recruiter_message=recruiter_message,
+        interaction_id=interaction_id
     )
-    db.session.add(message)
+    db.session.add(new_message)
     db.session.commit()
-    emit('message', message.to_dict(), broadcast=True)
+
+    # Emit the new message to all connected clients
+    socketio.emit('new_message', new_message.to_dict())
+
+    return jsonify(new_message.to_dict()), 201
 
 @app.get('/api/messages')
 def get_messages():

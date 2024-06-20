@@ -105,37 +105,33 @@ function NewListing() {
   // RENDER //
 
   return (
+    <body className='add-video-bg'>
+      <div>
 
-    <div className="window" style={{ marginLeft: '5em', width: 300 }}>
-    <div className="title-bar">
-    </div>
-    <div className="window-body">
-    <form className='user-form' onSubmit={handleSubmit}>
-
-      <h2>New Videos</h2>
-
-
-    <div>
-        <label for="item_name">Video Title</label>
-        <input id="item_name" type="text" onChange={e => setTitle(e.target.value)}
-      value={title}/>
-    </div>
-
-    <div>
-        <label for="link">Link</label>
-        <input id="link" type="text" onChange={e => setFilePath(e.target.value)}
-      value={file_path}/>
-    </div>
-
-    <input type="submit"
-      value='Add item'
-    />
-
-    </form>
-
-
-  </div>
-  </div>
+      <div className='add-video-container'>
+        <form className='submit-video-form' onSubmit={handleSubmit}>
+            <h2 className='nee-video'>New Videos</h2>
+              <div>
+                  <input id="item_name" type="text" onChange={e => setTitle(e.target.value)}
+                  value={title}
+                  placeholder='TITLE'
+                  required
+                  />
+                  
+              </div>
+              <div>
+              <input id="link" type="text" onChange={e => setFilePath(e.target.value)}
+            value={file_path}
+            placeholder='LINK'
+            />
+              </div>
+          <button type="submit" value='Add item'>Submit</button>
+          <br />
+          <br />
+        </form>
+            </div>
+      </div>
+    </body>
   )
 
 }

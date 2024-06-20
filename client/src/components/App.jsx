@@ -33,7 +33,7 @@ const App = () => {
 
     return (
             <div>
-                {/* <Navbar className='navbar'/> */}
+                <Navbar />
                 <div>
                     <Outlet context={{currentUser, setCurrentUser, currentRecruiter, setCurrentRecruiter}}/>
                 </div>
