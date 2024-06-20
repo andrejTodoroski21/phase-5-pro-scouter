@@ -24,26 +24,46 @@ function Profile() {
             .then(res => res.json())
             .then(data => setVideos(data));
     }, []);
+    const deleteVideos =(videoId)=>{
+        fetch(`/api/videos/${videoId}`, {
+            method: 'DELETE'
+        })
+        .then(response=>{
+            if(response.ok){
+                setVideos(videos.filter(video=> video.id !== videoId));
+            }else{
+                alert("Failed to delete video")
+            }
+        })
+        .catch(error=>{
+            console.error('Error deleting video:', error);
+            alert("Error deleting video");
+        });
+        
+    }
 
     return (
         <>
-            <br />
-            <br />
                 <div >
-                    <div >
-                        <div >
-                            <h3>My Videos</h3>
+                    <div className="profile-bg">
+                        <div className="profile-card">
+                            <h1>My Videos</h1>             
                         </div>
+                    </div>
+                    <div className="profile-background">
+                    
                         <div >
                             {currentUser && videos.filter(video => video.user_id === currentUser.id).length > 0 ? (
-                                <div>
+                                <div className="profile-div">
                                     {videos
                                         .filter(video => video.user_id === currentUser.id)
                                         .map(video => (
                                                 <div className="my-listing">
-                                                    <h4>{video.title}</h4>
-                                                    <YouTube videoId={video.file_path} />
-                                                    <h5>{video.time_uploaded}</h5>
+                                                    <YouTube  videoId={video.file_path} />
+                                                    {/* <h4>{video.title}</h4> */}
+                                                    {/* <h5>{video.time_uploaded}</h5> */}
+                                                    <button onClick={()=>deleteVideos(video.id)}>Delete</button>
+
                                                 <br />
                                                 </div>
                                         ))}

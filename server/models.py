@@ -40,7 +40,7 @@ class Recruiter(db.Model, SerializerMixin):
 class Video(db.Model, SerializerMixin):
     __tablename__ = "videos_table"
 
-    serialize_rules = ('-uploader.videos', '-likes.video',)
+    serialize_rules = ('-uploader.videos', '-likes.video', 'uploader.username',)
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)

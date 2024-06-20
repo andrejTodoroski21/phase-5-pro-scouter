@@ -1,6 +1,6 @@
-// src/components/Video.jsx
 import React, { useEffect, useState } from 'react';
 import YouTube from 'react-youtube';
+
 const Video = () => {
     const [videos, setVideos] = useState([]);
     const [error, setError] = useState(null);
@@ -23,42 +23,34 @@ const Video = () => {
             setError('Error fetching videos. Please try again later.');
         }
     };
-
-    const deleteVideos =(videoId)=>{
-        fetch(`/api/videos/${videoId}`, {
-            method: 'DELETE'
-        })
-        .then(response=>{
-            if(response.ok){
-                setVideos(videos.filter(video=> video.id !== videoId));
-            }else{
-                alert("Failed to delete video")
-            }
-        })
-        .catch(error=>{
-            console.error('Error deleting video:', error);
-            alert("Error deleting video");
-        });
-        
-    }
-    
+    const opts = {
+        height: '390',
+        width: '640',
+        playerVars: {
+            autoplay: 0,
+            rel: 0, // Disable related videos at the end
+            modestbranding: 1, // Remove YouTube logo
+            iv_load_policy: 3, // Disable video annotations
+            showinfo: 0, // Hide video title and uploader info
+        },
+    };
 
     return (
         <body className='videos-bg-image'>
-
-        <div>
-            <h1 className='browse'>Browse Videos</h1>
-            <div className='video-container'>
-                {videos.map((video) => (
-                    <div key={video.id}>
-                        <YouTube videoId={video.file_path} />
-                        <p className='video-title'>{video.title}</p>
-                        <button onClick={()=>deleteVideos(video.id)}>Delete</button>
-                    </div>
-                ))}
+            <div>
+                <h1 className='browse'>Browse Videos</h1>
+                <div className='video-container'>
+                    {videos.map((video) => (
+                        <div className='videos' key={video.id}>
+                            <YouTube opts={opts} videoId={video.file_path} />
+                            <br />
+                            <p className='video-title'>{video.title}</p>
+                            <p>By: {video.uploader?.username}</p> 
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
-                </body>
+        </body>
     );
 };
 
