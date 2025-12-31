@@ -7,13 +7,14 @@ import About from './components/About.jsx'
 import Login from './components/UserPanel/Login.jsx'
 import Signup from './components/UserPanel/Signup.jsx'
 import AddVideo from './components/AddVideo.jsx'
-import Message from './components/Message.jsx'
+// import MessagingPage from './components/MessagingPage.jsx'
 import App from './components/App.jsx'
 import Rsignup from './components/RecruiterPanel/Rsignup.jsx'
 import Rlogin from './components/RecruiterPanel/Rlogin.jsx'
 import RecruiterHome from './components/RecruiterHome.jsx'
 import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import MessagingPage from './components/MessagingPage.jsx'
 
 
 
@@ -52,7 +53,7 @@ const routes = [
       },
       {
         path: "messages",
-        element: <Message />
+        element: <MessagingPage currentUser={user} />
       },
       {path: "recruiter-signup",
       element: <Rsignup />

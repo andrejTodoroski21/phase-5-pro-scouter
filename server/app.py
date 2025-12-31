@@ -23,7 +23,9 @@ CORS(app,resources={r"/*":{"origins":"*"}})
 socketio = SocketIO(app)
 
 app.secret_key = os.environ.get('SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URL')
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URL')
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
@@ -62,9 +64,15 @@ def create_message():
 
     return jsonify(new_message.to_dict()), 201
 
-@app.get('/api/messages')
-def get_messages():
-    return [m.to_dict() for m in Message.query.all()], 200
+@app.route('/api.conversations')
+def get_conversations():
+    user_id = session.get('user_id')
+    users = Users.query.filter(User.id != user_id).all()
+    return [u.to_dict() for u in users], 200
+
+# @app.get('/api/messages')
+# def get_messages():
+#     return [m.to_dict() for m in Message.query.all()], 200
 
 @app.get('/api/users')
 def get_all_users():
