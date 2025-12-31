@@ -11,11 +11,11 @@ db = SQLAlchemy(metadata=metadata)
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users_table'
 
-    serialize_rules = ('-videos', '-liked_videos', '-recruiter_interactions.user', '-sent_messages.sender',)
+    serialize_rules = ('-videos', '-liked_videos', '-recruiter_interactions.user', '-sent_messages.sender', '-received_messages.recipient', '-_password_hash',)
 
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String, nullable=False)
-    last_name = db.Column(db.String, nullable=False)
+    last_name = db.Column(db.String, unique=True, nullable=False)
     username = db.Column(db.String, nullable=False)
     _hashed_password = db.Column(db.String, nullable=False)
 
@@ -23,6 +23,22 @@ class User(db.Model, SerializerMixin):
     liked_videos = db.relationship('Like', back_populates='user', lazy=True)
     recruiter_interactions = db.relationship('UserRecruiter', back_populates='user', lazy=True)
     sent_messages = db.relationship('Message', back_populates='sender', foreign_keys='Message.user_message', lazy=True)
+
+class Message(db.Model, SerializerMixin):
+    __tablename__ = 'messages_table'
+
+    serialize_rules = ('-sender.sent_messages', '-recipient.received_messages',)
+
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String, nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+    # the who
+    sender_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), nullable=False)
+    
+    # relationships to access user data easily
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='recveived_messages')
 
 class Recruiter(db.Model, SerializerMixin):
     __tablename__ = "recruiters_table"
@@ -62,21 +78,6 @@ class Like(db.Model, SerializerMixin):
     user = db.relationship('User', back_populates='liked_videos')
     video = db.relationship('Video', back_populates='likes')
 
-class Message(db.Model, SerializerMixin):
-    __tablename__ = 'messages_table'
-
-    serialize_rules = ('-sender.sent_messages', '-receiver.received_messages', '-interaction.messages',)
-
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, server_default=db.func.now())
-    user_message = db.Column(db.Integer, db.ForeignKey('users_table.id'))
-    recruiter_message = db.Column(db.Integer, db.ForeignKey('recruiters_table.id'), nullable=False)
-    interaction_id = db.Column(db.Integer, db.ForeignKey('users_recruiters_table.interaction_id'))
-    
-    sender = db.relationship('User', back_populates='sent_messages', foreign_keys=[user_message])
-    receiver = db.relationship('Recruiter', back_populates='received_messages', foreign_keys=[recruiter_message])
-    interaction = db.relationship('UserRecruiter', back_populates='messages')
 
 class UserRecruiter(db.Model, SerializerMixin):
     __tablename__ = 'users_recruiters_table'
