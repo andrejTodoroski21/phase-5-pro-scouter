@@ -18,11 +18,14 @@ class User(db.Model, SerializerMixin):
     last_name = db.Column(db.String, unique=True, nullable=False)
     username = db.Column(db.String, nullable=False)
     _hashed_password = db.Column(db.String, nullable=False)
+    
 
     videos = db.relationship('Video', back_populates='uploader', lazy=True)
     liked_videos = db.relationship('Like', back_populates='user', lazy=True)
     recruiter_interactions = db.relationship('UserRecruiter', back_populates='user', lazy=True)
-    sent_messages = db.relationship('Message', back_populates='sender', foreign_keys='Message.user_message', lazy=True)
+    received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', back_populates='recipient')
+    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', back_populates='sender')
+    
 
 class Message(db.Model, SerializerMixin):
     __tablename__ = 'messages_table'

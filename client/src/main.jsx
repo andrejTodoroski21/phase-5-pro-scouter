@@ -53,7 +53,7 @@ const routes = [
       },
       {
         path: "messages",
-        element: <MessagingPage currentUser={user} />
+        element: <MessagingPage />
       },
       {path: "recruiter-signup",
       element: <Rsignup />

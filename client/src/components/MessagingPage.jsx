@@ -1,10 +1,21 @@
 import React, {useState, useEffect} from "react";
+import { useOutletContext } from "react-router-dom";
 
-function MessagingPage({currentUser}){
+function MessagingPage(){
+    const { user: currentUser } = useOutletContext();
+
     const  [conversations, setConversations] = useState([]);
     const  [activeChat, setActiveChat] = useState(null);
     const  [messages, setMessages] = useState([]);
     const  [newMessage, setNewMessage] = useState("");
+
+    if(!currentUser){
+      return(
+        <div className="flex h-screen bg-black text-white items-center justify-center">
+        <p>Please log in to view your messages.</p>
+      </div>
+      );
+    }
 
     useEffect(()=>{
         fetch('api/conversations')
@@ -36,6 +47,7 @@ function MessagingPage({currentUser}){
         })
         
     }
+  
     return (
         <div className="flex h-screen bg-black text-white">
           {/* LEFT PANEL: Conversation List */}
