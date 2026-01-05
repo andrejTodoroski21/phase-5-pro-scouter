@@ -64,15 +64,24 @@ def create_message():
 
     return jsonify(new_message.to_dict()), 201
 
-@app.route('/api.conversations')
+@app.route('/api/conversations')
 def get_conversations():
     user_id = session.get('user_id')
+    if not user_id:
+        return {"Error": "Unauthorized"}, 401
+
     users = Users.query.filter(User.id != user_id).all()
     return [u.to_dict() for u in users], 200
 
-# @app.get('/api/messages')
-# def get_messages():
-#     return [m.to_dict() for m in Message.query.all()], 200
+@app.get('/api/messages/<int:recipient_id>')
+def get_chat_history():
+    user_id = session.get('user_id')
+    messages = Message.query.filter(
+        ((Message.sender_id == user_id) & (Message.recipient_id == recipient_id)) |
+        ((Message.sender_id == recipient_id) & (Message.recipient_id == user_id))
+    ).order_by(Message.created_at.asc()).all()
+    
+    return [m.to_dict() for m in messages], 200
 
 @app.get('/api/users')
 def get_all_users():
