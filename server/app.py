@@ -9,7 +9,7 @@ from flask_cors import CORS
 import random
 from flask_bcrypt import Bcrypt
 
-from models import db, User, Recruiter, Video, Like, Message, UserRecruiter
+from models import db, User, Recruiter, Video, Like, Message
 
 load_dotenv()
 
@@ -93,6 +93,25 @@ def get_user_by_username(username):
     return user.to_dict(), 200
 
 # user signup
+
+# @app.route('/api/signup', methods=['POST'])
+# def signup():
+#     data = request.get_json()
+#     print(f"DEBUG: Data received from frontend: {data}") # ADD THIS
+#     try:
+#         new_user = User(
+#             username=data.get('username'),
+#             email=data.get('email')
+#         )
+#         new_user.password_hash = data.get('password')
+#         db.session.add(new_user)
+#         db.session.commit()
+#         session['user_id'] = new_user.id
+#         return new_user.to_dict(), 201
+#     except Exception as e:
+#         print(f"DEBUG ERROR: {e}") # ADD THIS
+#         return {"error": str(e)}, 400
+
 @app.post('/api/signup')
 def signup():
     try: 

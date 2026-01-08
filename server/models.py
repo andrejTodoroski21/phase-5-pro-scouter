@@ -11,42 +11,53 @@ db = SQLAlchemy(metadata=metadata)
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users_table'
 
-    serialize_rules = ('-videos', '-liked_videos', '-recruiter_interactions.user', '-sent_messages.sender', '-received_messages.recipient', '-_password_hash',)
+    serialize_rules = (
+        '-videos.uploader', 
+        '-liked_videos.user', 
+        '-recruiter_interactions.user', 
+        '-sent_messages.sender', 
+        '-received_messages.recipient', 
+        '-_hashed_password',
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, unique=True, nullable=False)
     username = db.Column(db.String, nullable=False)
     _hashed_password = db.Column(db.String, nullable=False)
-    
 
     videos = db.relationship('Video', back_populates='uploader', lazy=True)
     liked_videos = db.relationship('Like', back_populates='user', lazy=True)
     recruiter_interactions = db.relationship('UserRecruiter', back_populates='user', lazy=True)
+    
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', back_populates='recipient')
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', back_populates='sender')
-    
 
 class Message(db.Model, SerializerMixin):
     __tablename__ = 'messages_table'
 
-    serialize_rules = ('-sender.sent_messages', '-recipient.received_messages',)
+    serialize_rules = ('-sender.sent_messages', '-recipient.received_messages', '-interaction.messages',)
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
-    # the who
+    
     sender_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), nullable=False)
     
-    # relationships to access user data easily
-    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
-    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='recveived_messages')
+    # ADDED: This is the missing link that was causing the UserRecruiter error
+    interaction_id = db.Column(db.Integer, db.ForeignKey('users_recruiters_table.interaction_id'), nullable=True)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], back_populates='sent_messages')
+    recipient = db.relationship('User', foreign_keys=[recipient_id], back_populates='received_messages')
+    
+    # Handshake with UserRecruiter
+    interaction = db.relationship('UserRecruiter', back_populates='messages')
 
 class Recruiter(db.Model, SerializerMixin):
     __tablename__ = "recruiters_table"
 
-    serialize_rules = ('-interactions.recruiter', '-received_messages.receiver',)
+    serialize_rules = ('-interactions.recruiter',)
 
     id = db.Column(db.Integer, primary_key=True)
     recruiter_name = db.Column(db.String, nullable=False)
@@ -54,7 +65,6 @@ class Recruiter(db.Model, SerializerMixin):
     _hashed_password = db.Column(db.String, nullable=False)
 
     interactions = db.relationship('UserRecruiter', back_populates='recruiter', lazy=True)
-    received_messages = db.relationship('Message', back_populates='receiver', foreign_keys='Message.recruiter_message', lazy=True)
 
 class Video(db.Model, SerializerMixin):
     __tablename__ = "videos_table"
@@ -81,7 +91,6 @@ class Like(db.Model, SerializerMixin):
     user = db.relationship('User', back_populates='liked_videos')
     video = db.relationship('Video', back_populates='likes')
 
-
 class UserRecruiter(db.Model, SerializerMixin):
     __tablename__ = 'users_recruiters_table'
 
@@ -90,7 +99,7 @@ class UserRecruiter(db.Model, SerializerMixin):
     interaction_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users_table.id'), nullable=False)
     recruiter_id = db.Column(db.Integer, db.ForeignKey('recruiters_table.id'), nullable=False)
-    interaction_type = db.Column(db.String(50), nullable=False)  # e.g., 'view', 'message'
+    interaction_type = db.Column(db.String(50), nullable=False) 
 
     user = db.relationship('User', back_populates='recruiter_interactions')
     recruiter = db.relationship('Recruiter', back_populates='interactions')
