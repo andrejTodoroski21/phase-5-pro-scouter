@@ -1,8 +1,8 @@
-"""initial migration
+"""final fix
 
-Revision ID: f9534cc7ac4e
+Revision ID: 47c704739001
 Revises: 
-Create Date: 2025-12-30 16:49:27.996344
+Create Date: 2026-01-08 16:31:33.268188
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f9534cc7ac4e'
+revision = '47c704739001'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,7 +31,8 @@ def upgrade():
     sa.Column('last_name', sa.String(), nullable=False),
     sa.Column('username', sa.String(), nullable=False),
     sa.Column('_hashed_password', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('last_name')
     )
     op.create_table('users_recruiters_table',
     sa.Column('interaction_id', sa.Integer(), autoincrement=True, nullable=False),
@@ -60,14 +61,14 @@ def upgrade():
     )
     op.create_table('messages_table',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('content', sa.String(), nullable=False),
     sa.Column('timestamp', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
-    sa.Column('user_message', sa.Integer(), nullable=True),
-    sa.Column('recruiter_message', sa.Integer(), nullable=False),
+    sa.Column('sender_id', sa.Integer(), nullable=False),
+    sa.Column('recipient_id', sa.Integer(), nullable=False),
     sa.Column('interaction_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['interaction_id'], ['users_recruiters_table.interaction_id'], name=op.f('fk_messages_table_interaction_id_users_recruiters_table')),
-    sa.ForeignKeyConstraint(['recruiter_message'], ['recruiters_table.id'], name=op.f('fk_messages_table_recruiter_message_recruiters_table')),
-    sa.ForeignKeyConstraint(['user_message'], ['users_table.id'], name=op.f('fk_messages_table_user_message_users_table')),
+    sa.ForeignKeyConstraint(['recipient_id'], ['users_table.id'], name=op.f('fk_messages_table_recipient_id_users_table')),
+    sa.ForeignKeyConstraint(['sender_id'], ['users_table.id'], name=op.f('fk_messages_table_sender_id_users_table')),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
