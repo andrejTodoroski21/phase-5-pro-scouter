@@ -57,3 +57,9 @@ __pycache__/
 *.db
 */*.db
 */*/*.db
+# Local secrets
+.secret.txt
+.env.local
+
+# Build output
+client/dist

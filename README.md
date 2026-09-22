@@ -1,66 +1,107 @@
-# Phase 4 Project Template
+# Pro Scouter
 
-## Getting Started - Git & Github
+A video-sharing platform for competitive players. Players upload clips of their
+matches; scouts browse the feed and message players directly.
 
-Elect one person to clone (DON'T FORK) this project to their local computer. That person will then run this command:
+- **Backend** — Flask + SQLAlchemy + Flask-Migrate, SQLite locally
+- **Frontend** — React 18 + React Router 6, built with Vite
 
-```
-git remote remove origin
-```
+## Requirements
 
-Navigate to github and create a new public repository, choose not to add a README, license, or any additional information. Once the empty repo has been created, follow the directions to upload an existing repository.
+- **Node 18 or newer.** Vite 5 will not build on Node 16 — it fails with
+  `crypto.getRandomValues is not a function`. A `.nvmrc` is checked in, so
+  `nvm use` in the project root picks the right version.
+- Python 3.9+
 
-Add your collaborators under `Settings > Collaborators` on github.
+## Setup
 
-## Getting Started - Flask
-
-Inside the project run these commands:
-
-```
-pipenv install
-pipenv shell
-cd server
-```
-
-Begin by building your first model. From there:
-
-```
-flask db init
-flask db migrate -m "example migration message"
-flask db upgrade
-```
-
-Any additional changes you make will only need the `flask db migrate -m "example migration message"` and `flask db upgrade`. It's recommended you build one model at a time to catch errors more easily.
-
-Once your database has been upgraded you may run the server with:
-
-```
-python app.py
-```
-
-In order to follow best practices with the React server proxy, begin all your route URLs with `/api` (for example `/api/users` for users route).
-
-A seed file has been provided under `seed.py`. To run the seed file:
-
-```
-python seed.py
-```
-
-## Getting Started - React
-
-The `client` directory contains a React template built by Vite, however you may replace it with one built by `create-react-app` or any other tool if you wish.
-
-At the end of any command using `npm`, append `--prefix client` so that it properly uses the `client` directory or else be sure to `cd client` beforehand.
-
-To start your React server, run:
-
-```
+```bash
+nvm use
+pipenv install && pipenv shell
 npm install --prefix client
-npm run dev --prefix client
 ```
 
-When making fetch requests, leave out the `localhost:5555` portion since a proxy already exists to that domain and instead prefix every request with `/api` to properly utilize the proxy request feature.
+Create a `.env` in the project root:
 
-## Conclusion
+```
+SECRET_KEY=<any long random string>
+# Optional. Without it the app uses local SQLite, which is what you want
+# for development — pointing at a remote database makes every query a
+# network round trip.
+# DATABASE_URL=postgresql://...
+```
 
-Once you've completed work on this project, replace this README with one of your own devising!
+## Running
+
+Two terminals:
+
+```bash
+cd server && python app.py          # API on :5555
+```
+
+```bash
+npm run dev --prefix client         # UI on :5173, proxies /api to :5555
+```
+
+## Database
+
+```bash
+cd server
+flask db upgrade          # apply migrations
+python seed.py            # reset and fill with demo data
+```
+
+`seed.py` prints a username to log in with. Every seeded account uses the
+password `password`.
+
+## Layout
+
+```
+server/
+  app.py              application factory; also serves the built client
+  extensions.py       shared db / bcrypt / migrate / socketio instances
+  models.py           SQLAlchemy models with hand-written to_dict()
+  routes/
+    auth.py           signup, login, logout, session, for users and recruiters
+    videos.py         video feed (paginated), upload, delete
+    messages.py       conversation list and direct messages
+    events.py         Socket.IO handlers
+  seed.py
+
+client/src/
+  lib/api.js          fetch wrapper; sends the session cookie, throws on errors
+  context/            auth provider and the useAuth hook
+  components/
+    LiteYouTube.jsx   thumbnail that becomes an iframe only when clicked
+```
+
+## API
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| POST | `/api/signup` | `{username, first_name, last_name, password}` |
+| POST | `/api/login` | `{username, password}` |
+| DELETE | `/api/logout` | |
+| GET | `/api/get-session-user` | `204` when signed out |
+| POST | `/api/recruiters` | recruiter signup |
+| POST | `/api/recruiters-login` | |
+| DELETE | `/api/recruiters-logout` | |
+| GET | `/api/get-session-recruiter` | |
+| GET | `/api/videos` | `?page=&per_page=&user_id=` |
+| POST | `/api/videos` | `{title, file_path}`; owner comes from the session |
+| DELETE | `/api/videos/<id>` | owner only |
+| GET | `/api/conversations` | |
+| GET | `/api/messages/<user_id>` | |
+| POST | `/api/messages` | `{recipient_id, content}` |
+
+`file_path` accepts a full YouTube URL or a bare video id; the server stores the id.
+
+## Deploying
+
+```bash
+npm run build --prefix client
+cd server && gunicorn app:app
+```
+
+The Flask app serves `client/dist` and sends far-future cache headers for
+Vite's fingerprinted assets.

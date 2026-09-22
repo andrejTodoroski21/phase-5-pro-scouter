@@ -1,23 +1,32 @@
-import { Link } from 'react-router-dom'
-import '../src/Navbar.css';
+import { NavLink } from 'react-router-dom'
+import { useAuth } from './context/auth-context.js'
 
-function Navbar () {
+const linkClass = ({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')
 
-    return (
-        <div className='navbar-container'>
-            
-            <Link className='videos-navbar' to="/videos">Videos</Link>
-            &nbsp; &nbsp;
-            <Link className='messages-navbar' to="/messages">Messages</Link>
-            &nbsp; &nbsp;
-            <Link className='add-video-navbar' to="/add-video">Add Video</Link>
-            &nbsp; &nbsp;
-            <Link className='auth-navbar' to="/login">Login | <Link className='navbar' to='/signup'> Signup</Link></Link>
-            &nbsp; &nbsp;
-            <Link className='profile-navbar' to="/profile">Profile</Link>
-            
-        </div>
-    )
+function Navbar() {
+  const { currentUser, currentRecruiter } = useAuth()
+
+  return (
+    <nav className="navbar-container">
+      <NavLink className={linkClass} to="/">Home</NavLink>
+      <NavLink className={linkClass} to="/videos">Videos</NavLink>
+      <NavLink className={linkClass} to="/messages">Messages</NavLink>
+      <NavLink className={linkClass} to="/add-video">Add Video</NavLink>
+      {currentUser ? (
+        <NavLink className={linkClass} to="/profile">Profile</NavLink>
+      ) : (
+        // These were previously one <Link> nested inside another, which is
+        // invalid HTML — the browser silently unnested it.
+        <>
+          <NavLink className={linkClass} to="/login">Login</NavLink>
+          <NavLink className={linkClass} to="/signup">Signup</NavLink>
+        </>
+      )}
+      {currentRecruiter && (
+        <NavLink className={linkClass} to="/recruiter-home">Recruiter</NavLink>
+      )}
+    </nav>
+  )
 }
 
 export default Navbar

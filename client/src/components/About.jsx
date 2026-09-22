@@ -1,12 +1,14 @@
-import React from "react";
-
-function About(){
-    return(
-        <div>
-            <h1>About</h1>
-            <p>The purpose of pro scouter is to give players an opportunity to show
-                 off their skills in a media sharing platform, where players can show off their skills. Scouters can also log onto the website and browse for talent</p>
-        </div>
-    )
+function About() {
+  return (
+    <section className="page page-prose">
+      <h1>About</h1>
+      <p>
+        The purpose of Pro Scouter is to give players an opportunity to show off
+        their skills on a media sharing platform. Scouts can log on and browse
+        for talent, then message players directly.
+      </p>
+    </section>
+  )
 }
+
 export default About

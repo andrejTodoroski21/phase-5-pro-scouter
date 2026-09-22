@@ -1,236 +1,104 @@
 #!/usr/bin/env python3
-import os
-from dotenv import load_dotenv
-from flask import Flask, request, session, jsonify, render_template, redirect
-from flask_socketio import SocketIO, emit, join_room, leave_room, send
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_cors import CORS
-import random
-from flask_bcrypt import Bcrypt
+"""Application factory.
 
-from models import db, User, Recruiter, Video, Like, Message
+``app`` is still exposed at module level so ``flask db migrate`` and
+``python app.py`` keep working exactly as the README describes.
+"""
+import os
+from datetime import timedelta
+from pathlib import Path
+
+from dotenv import load_dotenv
+from flask import Flask, send_from_directory
+
+from extensions import bcrypt, cors, db, migrate, socketio
 
 load_dotenv()
 
-app = Flask(
-    __name__,
-    static_url_path='',
-    static_folder='../client/dist',
-    template_folder='../client/dist'
-)
-CORS(app,resources={r"/*":{"origins":"*"}})
-socketio = SocketIO(app)
+CLIENT_DIST = (Path(__file__).resolve().parent.parent / 'client' / 'dist')
 
-app.secret_key = os.environ.get('SECRET_KEY')
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URL')
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.json.compact = False
 
-CORS(app)
-@app.errorhandler(404)
-def not_found(e):
-    return render_template("index.html")
-
-migrate = Migrate(app, db)
-bycrypt = Bcrypt(app)
-
-db.init_app(app)
-
-@app.route('/api/messages', methods=['POST'])
-def create_message():
-    data = request.json
-    content = data.get('content')
-    user_message = data.get('user_message')
-    recruiter_message = data.get('recruiter_message')
-    interaction_id = data.get('interaction_id')
-
-    if not content or not user_message or not recruiter_message or not interaction_id:
-        return jsonify({'error': 'Missing required fields'}), 400
-
-    new_message = Message(
-        content=content,
-        user_message=user_message,
-        recruiter_message=recruiter_message,
-        interaction_id=interaction_id
+def create_app(config=None):
+    app = Flask(
+        __name__,
+        # Static files are served by the SPA catch-all below so that the
+        # long-lived cache headers actually get applied to Vite's assets.
+        static_folder=None,
+        template_folder=str(CLIENT_DIST),
     )
-    db.session.add(new_message)
-    db.session.commit()
 
-    # Emit the new message to all connected clients
-    socketio.emit('new_message', new_message.to_dict())
+    app.config.update(
+        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev-only-insecure-key'),
+        SQLALCHEMY_DATABASE_URI=_database_url(),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        # Pre-ping keeps pooled connections from going stale on hosted Postgres,
+        # which otherwise shows up as a multi-second hang on the first request.
+        SQLALCHEMY_ENGINE_OPTIONS={'pool_pre_ping': True},
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+        PERMANENT_SESSION_LIFETIME=timedelta(days=7),
+        JSON_SORT_KEYS=False,
+    )
+    if config:
+        app.config.update(config)
 
-    return jsonify(new_message.to_dict()), 201
+    db.init_app(app)
+    migrate.init_app(app, db, directory=str(Path(__file__).resolve().parent / 'migrations'))
+    bcrypt.init_app(app)
+    # Credentials must be allowed for the session cookie to survive a
+    # cross-origin request; that rules out the "*" origin wildcard.
+    cors.init_app(
+        app,
+        resources={r'/api/*': {'origins': _allowed_origins()}},
+        supports_credentials=True,
+    )
+    socketio.init_app(app, cors_allowed_origins=_allowed_origins())
 
-@app.route('/api/conversations')
-def get_conversations():
-    user_id = session.get('user_id')
-    if not user_id:
-        return {"Error": "Unauthorized"}, 401
+    import models  # noqa: F401  (registers the mapped classes)
+    from routes import register_blueprints
+    register_blueprints(app)
 
-    users = Users.query.filter(User.id != user_id).all()
-    return [u.to_dict() for u in users], 200
-
-@app.get('/api/messages/<int:recipient_id>')
-def get_chat_history():
-    user_id = session.get('user_id')
-    messages = Message.query.filter(
-        ((Message.sender_id == user_id) & (Message.recipient_id == recipient_id)) |
-        ((Message.sender_id == recipient_id) & (Message.recipient_id == user_id))
-    ).order_by(Message.created_at.asc()).all()
-    
-    return [m.to_dict() for m in messages], 200
-
-@app.get('/api/users')
-def get_all_users():
-    return [u.to_dict() for u in User.query.all()], 200
-
-@app.get('/api/users/<string:username>')
-def get_user_by_username(username):
-    user = User.query.filter(User.username == username).first()
-    return user.to_dict(), 200
-
-# user signup
-
-# @app.route('/api/signup', methods=['POST'])
-# def signup():
-#     data = request.get_json()
-#     print(f"DEBUG: Data received from frontend: {data}") # ADD THIS
-#     try:
-#         new_user = User(
-#             username=data.get('username'),
-#             email=data.get('email')
-#         )
-#         new_user.password_hash = data.get('password')
-#         db.session.add(new_user)
-#         db.session.commit()
-#         session['user_id'] = new_user.id
-#         return new_user.to_dict(), 201
-#     except Exception as e:
-#         print(f"DEBUG ERROR: {e}") # ADD THIS
-#         return {"error": str(e)}, 400
-
-@app.post('/api/signup')
-def signup():
-    try: 
-        new_user = User(username=request.json['username'], first_name = request.json['first_name'], last_name = request.json['last_name'])
-        new_user._hashed_password = bycrypt.generate_password_hash(request.json['_hashed_password']).decode('utf-8')
-        db.session.add(new_user)
-        db.session.commit()
-        return new_user.to_dict(), 201
-    except Exception as e:
-        return {'error': str(e)}, 400
-
-@app.post('/api/login')
-def user_login():
-    username = request.json['username']
-    password = request.json['password']
-    user = User.query.filter_by(username=username).first()
-    if user and bycrypt.check_password_hash(user._hashed_password, password):
-        session['user_id'] = user.id
-        return user.to_dict(), 201
-    else: 
-        return {'error': 'Invalid username or password'}, 401
-
-# check to see if user is logged in
-@app.get('/api/get-session-user')
-def get_session_user():
-    user_id = session.get('user_id')
-    if user_id:
-        user = User.query.get(user_id)
-        if user:
-            return user.to_dict(),200
-    return {}, 404
-
-@app.delete('/api/logout')
-def logout():
-    session.pop('user_id')  # Remove the user ID from the session on logout
-    return {}, 204
-
-# recruiter signup
-@app.post('/api/recruiters')
-def create_recruiter():
-    try:
-        new_recruiter = Recruiter(recruiter_username = request.json['recruiter_username'], recruiter_name = request.json['recruiter_name'])
-        new_recruiter._hashed_password = bycrypt.generate_password_hash(request.json['_hashed_password']).decode('utf-8')
-        db.session.add(new_recruiter)
-        db.session.commit()
-        return new_recruiter.to_dict()
-    except Exception as e:
-        return {'error': str(e)}, 400
-
-@app.post('/api/recruiters-login')
-def recruiter_login():
-    recruiter_username = request.json['recruiter_username']
-    password = request.json['password']
-    recruiter = Recruiter.query.filter_by(recruiter_username=recruiter_username).first()
-    if recruiter and bycrypt.check_password_hash(recruiter._hashed_password, password):
-        session['recruiter_id'] = recruiter.id
-        return recruiter.to_dict(), 201
-    else:
-        return {'error': 'Invalid username or password'}, 401
-
-@app.get('/api/recruiters')
-def get_all_recruiters():
-    return [r.to_dict() for r in Recruiter.query.all()], 200
-
-#RECRUITER LOGOUT
-@app.delete('/api/recruiters')
-def recruiter_logout():
-    session.pop('recruiter_id')
-    return {}, 204
-
-# checks the session to see if recruiter is logged in
-@app.get('/api/get-session-recruiter')
-def get_session_recruiter():
-    recruiter_id = session.get('recruiter_id')
-    if recruiter_id:
-        recruiter = Recruiter.query.get(recruiter_id)
-        if recruiter:
-            return recruiter.to_dict(), 200
-    return {}, 400
-
-# get all videos
-@app.get('/api/videos')
-def get_all_videos():
-    return [v.to_dict() for v in Video.query.all()], 200
-
-# posting a new video
-@app.post('/api/videos')
-def create_video():
-    try:
-        data = request.json
-        new_video = Video(**data)
-        db.session.add(new_video)
-        db.session.commit()
-        return jsonify(new_video.to_dict()), 201
-    except Exception as e:
-        return {'error':str(e)}, 400
+    _register_spa(app)
+    return app
 
 
-@app.delete('/api/videos/<int:id>')
-def delete_video(id):
-    try:
-        video = Video.query.get(id)
-        if video:
-            if video.user_id == session.get('user_id'):
-                db.session.delete(video)
-                db.session.commit()
-                return {'message': 'Video deleted successfully'}, 200
-            else:
-                return {'error': 'You are not authorized to delete this video'}, 401
-        else:
-            return {'error': 'Video not found'}, 404
-    except Exception as e:
-        return {'error': str(e)}, 500
+def _database_url():
+    """Local SQLite unless DATABASE_URL is set.
+
+    Pointing local development at a remote free-tier Postgres adds a network
+    round trip to every single query, which reads as a slow site.
+    """
+    url = os.environ.get('DATABASE_URL', '').strip()
+    if not url:
+        return 'sqlite:///app.db'
+    # SQLAlchemy dropped the legacy postgres:// scheme.
+    return url.replace('postgres://', 'postgresql://', 1)
 
 
+def _allowed_origins():
+    raw = os.environ.get('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+    return [o.strip() for o in raw.split(',') if o.strip()]
 
 
+def _register_spa(app):
+    """Serve the built client, with long cache lifetimes on hashed assets."""
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_client(path):
+        target = CLIENT_DIST / path
+        if path and target.is_file():
+            response = send_from_directory(str(CLIENT_DIST), path)
+            if path.startswith('assets/'):
+                # Vite fingerprints these filenames, so they are safe to pin.
+                response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+            return response
+        if not (CLIENT_DIST / 'index.html').is_file():
+            return {'error': 'client not built — run `npm run build --prefix client`'}, 404
+        return send_from_directory(str(CLIENT_DIST), 'index.html')
 
 
+app = create_app()
 
 if __name__ == '__main__':
-    socketio.run(app, port=5555, debug=True)
+    socketio.run(app, port=5555, debug=True, allow_unsafe_werkzeug=True)

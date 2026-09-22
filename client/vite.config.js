@@ -1,12 +1,29 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:5555'
-    }
-  }
+      '/api': {
+        target: 'http://localhost:5555',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:5555',
+        ws: true,
+      },
+    },
+  },
+  build: {
+    // Router and React change far less often than app code, so giving them
+    // their own chunk keeps them cached across deploys.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
 })

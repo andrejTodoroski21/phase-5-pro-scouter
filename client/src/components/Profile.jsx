@@ -1,82 +1,64 @@
-import React, { useEffect, useState } from "react";
-import { Link, useOutletContext } from 'react-router-dom';
-import YouTube from 'react-youtube';
-
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import api from '../lib/api'
+import LiteYouTube from './LiteYouTube.jsx'
+import { useAuth } from '../context/auth-context.js'
 
 function Profile() {
-    const { currentUser } = useOutletContext();
-    const { setCurrentUser } = useOutletContext();
+  const { currentUser, loading } = useAuth()
+  const [videos, setVideos] = useState([])
+  const [error, setError] = useState(null)
 
-    const [videos, setVideos] = useState([]);
+  useEffect(() => {
+    if (!currentUser) return undefined
+    const controller = new AbortController()
+    // Filtered server-side. This used to download every video in the database
+    // and throw away everything that was not the current user's.
+    api.get(`/videos?user_id=${currentUser.id}&per_page=50`, { signal: controller.signal })
+      .then((data) => setVideos(data.videos))
+      .catch((err) => {
+        if (err.name !== 'AbortError') setError('Could not load your videos.')
+      })
+    return () => controller.abort()
+  }, [currentUser])
 
-    useEffect(() => {
-        fetch('/api/get-session')
-            .then(response => {
-                if (response.status === 200) {
-                    response.json()
-                        .then(loggedInUser => setCurrentUser(loggedInUser))
-                }
-            })
-    }, []);
+  const deleteVideo = (videoId) => {
+    api.del(`/videos/${videoId}`)
+      .then(() => setVideos((previous) => previous.filter((v) => v.id !== videoId)))
+      .catch(() => setError('Failed to delete video.'))
+  }
 
-    useEffect(() => {
-        fetch('/api/videos')
-            .then(res => res.json())
-            .then(data => setVideos(data));
-    }, []);
-    const deleteVideos =(videoId)=>{
-        fetch(`/api/videos/${videoId}`, {
-            method: 'DELETE'
-        })
-        .then(response=>{
-            if(response.ok){
-                setVideos(videos.filter(video=> video.id !== videoId));
-            }else{
-                alert("Failed to delete video")
-            }
-        })
-        .catch(error=>{
-            console.error('Error deleting video:', error);
-            alert("Error deleting video");
-        });
-        
-    }
-
+  if (loading) return <p className="muted page">Loading…</p>
+  if (!currentUser) {
     return (
-        <>
-                <div >
-                    <div className="profile-bg">
-                        <div className="profile-card">
-                            <h1>My Videos</h1>             
-                        </div>
-                    </div>
-                    <div className="profile-background">
-                    
-                        <div >
-                            {currentUser && videos.filter(video => video.user_id === currentUser.id).length > 0 ? (
-                                <div className="profile-div">
-                                    {videos
-                                        .filter(video => video.user_id === currentUser.id)
-                                        .map(video => (
-                                                <div className="my-listing">
-                                                    <YouTube  videoId={video.file_path} />
-                                                    {/* <h4>{video.title}</h4> */}
-                                                    {/* <h5>{video.time_uploaded}</h5> */}
-                                                    <button onClick={()=>deleteVideos(video.id)}>Delete</button>
-
-                                                <br />
-                                                </div>
-                                        ))}
-                                </div>
-                            ) : (
-                                <h3>No Videos found</h3>
-                            )}
-                        </div>
-                    </div>
-                </div>
-        </>
+      <div className="page">
+        <p>Please <Link to="/login">log in</Link> to see your profile.</p>
+      </div>
     )
+  }
+
+  return (
+    <div className="page profile-page">
+      <header className="profile-header">
+        <h1>My Videos</h1>
+        <p className="muted">{currentUser.username}</p>
+      </header>
+      {error && <p className="error">{error}</p>}
+      {videos.length === 0 ? (
+        <p className="muted">No videos yet. <Link to="/add-video">Add one</Link>.</p>
+      ) : (
+        <div className="video-grid">
+          {videos.map((video) => (
+            <article className="video-card" key={video.id}>
+              <LiteYouTube videoId={video.file_path} title={video.title} />
+              <p className="video-title">{video.title}</p>
+              <button type="button" onClick={() => deleteVideo(video.id)}>Delete</button>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
-export default Profile;
-
+export default Profile
