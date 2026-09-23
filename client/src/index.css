@@ -1,326 +1,438 @@
-body{
-  margin: 0;
-  font-family: 'Mark Pro', Arial, sans-serif;
+/* ---------------------------------------------------------------------------
+   Pro Scouter styles
+
+   Two things in the previous stylesheet dominated the "slow site" feeling:
+
+   1. `background-attachment: fixed` combined with `background-size: cover` on
+      four separate pages. That pairing forces the browser to rescale and
+      repaint the whole background image on every scroll frame and opts the
+      element out of GPU compositing, so scrolling janks no matter how little
+      content is on the page.
+   2. Those backgrounds were hot-linked full-resolution JPEGs from third-party
+      hosts (one of them 4096px wide) with no control over caching.
+
+   Both are gone. The one background that remains is a locally served,
+   resized image, and it scrolls normally.
+--------------------------------------------------------------------------- */
+
+:root {
+  --bg: #101114;
+  --surface: #1b1d22;
+  --surface-alt: #24272e;
+  --text: #f2f3f5;
+  --text-muted: #9aa0aa;
+  --accent: #ff4655;
+  --border: #32363f;
+  --radius: 6px;
 }
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, caption {
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
-  border: 0;
-  outline: 0;
-  /* font-size: 100%; */
-  vertical-align: baseline;
-  background: transparent;
 }
-::selection{
-  color: #ffffff;
-  background: #d1363a;
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Mark Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  line-height: 1.5;
+}
+
+::selection {
+  color: #fff;
+  background: var(--accent);
   text-shadow: none;
 }
 
-.bg-image, .login-bg-image {
-  background-image: url(https://freight.cargo.site/w/4096/q/75/i/7212fd19194df171a4b429ef173b7fbd494cd8086f175e95bfb4de1d547a3eed/FGwR9c-XsAwZq-e.jpeg);
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-attachment: fixed;
-  background-size: cover;
-  height: 100vh;
-  margin: 0;
-  font-family: 'FF Mark W05', sans-serif;
-  content:"";
-	/* position:fixed; */
-	left:0;
-	top:0;
-	right:0;
-	bottom:0;
-	z-index:-1;
-	display:block;
+h1, h2, h3, h4, h5, p, figure, blockquote {
+  margin: 0 0 0.75rem;
 }
-main{
-  grid-template-columns: repeat(12, 1fr);
-  column-gap: 16px;
-}
-.create-account-div{
-  margin-bottom: 1px;
-  margin-left: 30px;
-  margin-top: 200px;
-  width: 200px;
-  height: 200px;
-  position: absolute;
-}
-.create-account {
-  font-size: 32.44px;
-  font-weight: 900;
-  line-height: 100%;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  text-align: inherit;
-  color: rgb(255, 255, 255);
-}
-.signup-container, .login-container {
-  margin:0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 150%;
-  height: 100%;
 
+img {
+  max-width: 100%;
+  display: block;
 }
-.signup-form, .login-form{
-  background-color: #ffffff;
-  padding: 40px;
-  width: 300px;
+
+a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+/* --- layout --------------------------------------------------------------- */
+
+.app-shell {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-}
-.signup-form h5 {
-  margin-bottom: 20px;
-  color: #000000; /* White text */
-  text-align: center;
-  font-size: 24px;
-}
-.login-text-center{
-  text-align: center;
-}
-.signup-form input, .login-form input, .submit-video-form input{
-  width: 100%;
-  align-items: center;
-  padding: 15px;
-  margin-bottom: 20px;
-  border: 1px solid #283245;
-  background-color: #ffffff; 
-  color: #000000; 
-  font-size: 16px;
+  min-height: 100vh;
 }
 
-.signup-form input::placeholder {
-  color: #aeb3b8; /* Placeholder color */
+.app-main {
+  flex: 1;
 }
-button{
-  display: block;
-  margin:auto;
-  width:50%;
-  background-color: #FF4655;
-  color: #FFFFFF;
-  border: 2px solid #FF4655;
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: bold;
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.page-prose {
+  max-width: 680px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.error {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* --- navbar --------------------------------------------------------------- */
+
+.navbar-container {
+  background: #000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 1.25rem;
+}
+
+.nav-link {
+  color: #fff;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.nav-link.is-active {
+  color: var(--accent);
+}
+
+/* --- footer --------------------------------------------------------------- */
+
+.footer-container {
+  background: #000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: space-evenly;
+  padding: 1.5rem 1.25rem;
+  font-size: 0.8rem;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #fff;
+}
+
+.footer-links h5 {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+.footer-links a,
+.footer-links span {
+  color: var(--text-muted);
+}
+
+/* --- forms and buttons ---------------------------------------------------- */
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 0.65rem 1.25rem;
+  font: inherit;
+  font-weight: 700;
   text-transform: uppercase;
   cursor: pointer;
-  outline: none;
-  position: relative;
-  overflow: hidden;
-  transition: background-color 0.3s, transform 0.3s;
-  font-family: 'Valorant', sans-serif; 
-  border-radius: 4px; 
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s ease;
 }
-.form-card{
-  padding: inherit;
+
+button:hover {
+  opacity: 0.85;
 }
-a{
-  text-decoration: none;
-  color: rgb(74 74 74);
-  display: flex;
-  justify-content: center;
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.video-container{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.message-container {
-  width: 50%;
-  margin: 0 auto;
-  border: 1px solid #ccc;
-  padding: 20px;
-  border-radius: 10px;
-}
-.messages {
-  height: 400px;
-  overflow-y: scroll;
-  border: 1px solid #eee;
-  padding: 10px;
-  margin-bottom: 20px;
-}
-.message {
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 10px;
-}
-.message.sent {
-  background-color: #d1e7dd;
-  text-align: right;
-}
-.message.received {
-  background-color: #f8d7da;
-  text-align: left;
-}
-.message-input {
-  display: flex;
-  gap: 10px;
-}
-.message-input input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-.message-input button {
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  background-color: #007bff;
-  color: white;
-}
-.page-container{
-  position: relative;
-  /* min-height: 100vh; */
-}
-.content-wrap {
-  padding-bottom: 2.5rem;    /* Footer height */
-}
-.footer-container{
-  overflow: hidden;
-  background: black;
-  display: flex;
-  justify-content: space-evenly;
-  padding-bottom: 20px;
-  position: absolute;
-  bottom: 0;
+
+input {
   width: 100%;
-  height: 2.5rem;   
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: #000;
+  font: inherit;
 }
-.footer-links{
-  padding-right: 8%;
-  width: auto;
-  float: left;
-  padding-left: 40px;
-  padding-right: 135px;
-  color: #000000;
-  font-family: Source Sans Pro, sans-serif;
-  font-size: 12px;
-  line-height: 15px;
-  color : white;
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
-.footer-container h5{
-    text-align: center;
-    text-transform: uppercase;
-}
-.video-title{
-  font-size: x-large;
-  text-transform: capitalize;
-}
-.browse{
-  text-align: center;
-  color: white;
-  padding: 20px;
-}
-.video-container{
-  padding-bottom: 40px;
-  background: white;
-  background-image: url(https://s3-eu-central-1.amazonaws.com/www-staging.esports.com/WP%20Media%20Folder%20-%20esports-com//var/app/current/web/app/uploads/2021/03/Riot-might-be-changing-up-EU-VCT-format.jpg);
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-attachment: fixed;
-  background-size: cover;
-  margin : 0
-  /* border: #000000; */
-}
-.videos-bg-image{
- background-image: url(https://s3-eu-central-1.amazonaws.com/www-staging.esports.com/WP%20Media%20Folder%20-%20esports-com//var/app/current/web/app/uploads/2021/03/Riot-might-be-changing-up-EU-VCT-format.jpg);
- background-repeat: no-repeat;
- background-position: center center;
- background-attachment: fixed;
- background-size: cover;
- margin: 0;
-}
-.videos{
-  padding: 30px;
-  background: rgb(31, 31, 31);
-  color: rgb(213, 213, 213);
-}
-.my-listing{
+
+.auth-page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 30px;
-}
-.my-videos{
-  text-align: center;
-  padding: 30px;
-  font-size: x-large;
-}
-
-.my-listing button{
-  width: auto;
-}
-
-.profile-card{
-  color: #f8454e;
-  width: auto;
-  display: flex;
   justify-content: center;
-  align-items: center;
-  text-shadow: #1f364c 2px 5px;
+  gap: 1.5rem;
+  min-height: 70vh;
+  /* Locally served and resized, and it scrolls with the page. */
+  background-image: linear-gradient(rgba(16, 17, 20, 0.7), rgba(16, 17, 20, 0.9)), url('/hero.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.submit-video-form h2{
+.auth-form {
+  width: min(360px, 100%);
+}
+
+.auth-alt {
+  color: var(--text-muted);
+  font-size: 0.85rem;
   text-align: center;
 }
-.add-video-container{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 30px;
-}
-.add-video-bg{
-  background-image: url(https://images4.alphacoders.com/133/thumb-1920-1337226.jpeg);
-  background-repeat: no-repeat;
-  background-position: center ;
-  background-attachment: fixed;
-  background-size: cover;
-  height: 100vh;
-}
-.submit-video-form{
-  background-color: #ffffff;
-  padding: 40px;
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  position: absolute;
-  left: 10%;
-  border: 1rem solid;
-}
-.navbar-container{
-  background: black;
-  color: white;
-  padding: 20px;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  top: 0;
+
+.create-account {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
 }
 
-.navbar-container a {
-  color:white;
-}
-.profile-div{
-  background: rgb(31, 31, 31);;
-}
-.profile-bg{
-  /* background-image: url(https://tasbihdigital.com/wp-content/uploads/2022/10/HD-Valorant-Wallpaper.jpg); */
-  background-image: url(https://www.svg.com/img/gallery/this-is-what-we-know-about-valorant-agent-14/l-intro-1608213003.jpg);
-  padding: 200px;
-  background-repeat: no-repeat;
-  background-position: center ;
-  background-attachment: fixed;
-  background-size: cover;
-}
-.login-card, .form-card{
+.home-actions {
   display: flex;
-    flex-direction: column;
-    align-items: center;
+  gap: 1rem;
+}
+
+/* --- videos --------------------------------------------------------------- */
+
+.browse {
+  text-align: center;
+  padding-bottom: 1rem;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.video-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.video-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.video-meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Reserving the aspect ratio up front keeps the grid from reflowing when the
+   thumbnails finish loading. */
+.video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  padding: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+}
+
+.video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-facade {
+  cursor: pointer;
+}
+
+.video-facade img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 68px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.video-play::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 11px 0 11px 19px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.video-facade:hover .video-play {
+  background: var(--accent);
+}
+
+.profile-header {
+  margin-bottom: 1.5rem;
+}
+
+/* --- messaging ------------------------------------------------------------ */
+
+.messaging {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 2fr;
+  height: calc(100vh - 160px);
+  border-top: 1px solid var(--border);
+}
+
+.messaging-list {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.messaging-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  text-align: left;
+  text-transform: none;
+  font-weight: 400;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.85rem 0.5rem;
+  color: var(--text);
+}
+
+.messaging-row:hover,
+.messaging-row.is-active {
+  background: var(--surface-alt);
+  opacity: 1;
+}
+
+.messaging-name {
+  font-weight: 600;
+}
+
+.messaging-preview {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messaging-thread {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.messaging-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+}
+
+.messaging-bubbles {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bubble {
+  align-self: flex-start;
+  max-width: 60%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 1rem;
+  background: var(--surface-alt);
+}
+
+.bubble-mine {
+  align-self: flex-end;
+  background: #2563eb;
+}
+
+.messaging-compose {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.messaging-empty {
+  margin: auto;
+}
+
+@media (max-width: 760px) {
+  .messaging {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .messaging-list {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    max-height: 40vh;
+  }
 }

@@ -1,80 +1,50 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
-import Home from './components/Home.jsx'
-import Video from './components/Video.jsx'
-import Profile from './components/Profile.jsx'
-import About from './components/About.jsx'
-import Login from './components/UserPanel/Login.jsx'
-import Signup from './components/UserPanel/Signup.jsx'
-import AddVideo from './components/AddVideo.jsx'
-// import MessagingPage from './components/MessagingPage.jsx'
-import App from './components/App.jsx'
-import Rsignup from './components/RecruiterPanel/Rsignup.jsx'
-import Rlogin from './components/RecruiterPanel/Rlogin.jsx'
-import RecruiterHome from './components/RecruiterHome.jsx'
-import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import MessagingPage from './components/MessagingPage.jsx'
+import App from './components/App.jsx'
+import Home from './components/Home.jsx'
+import './index.css'
 
+// Everything past the landing page is code-split, so the first paint no longer
+// ships the messaging page, both signup flows and the video grid to a visitor
+// who only wanted the home page.
+const Video = lazy(() => import('./components/Video.jsx'))
+const Profile = lazy(() => import('./components/Profile.jsx'))
+const About = lazy(() => import('./components/About.jsx'))
+const Login = lazy(() => import('./components/UserPanel/Login.jsx'))
+const Signup = lazy(() => import('./components/UserPanel/Signup.jsx'))
+const AddVideo = lazy(() => import('./components/AddVideo.jsx'))
+const MessagingPage = lazy(() => import('./components/MessagingPage.jsx'))
+const Rsignup = lazy(() => import('./components/RecruiterPanel/Rsignup.jsx'))
+const Rlogin = lazy(() => import('./components/RecruiterPanel/Rlogin.jsx'))
+const RecruiterHome = lazy(() => import('./components/RecruiterHome.jsx'))
 
+const withSuspense = (element) => (
+  <Suspense fallback={<p className="muted page">Loading…</p>}>{element}</Suspense>
+)
 
-const routes = [
+const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <App />,
     children: [
-      {
-        index: true,
-        element: <Home />
-      },
-      {
-        path: "videos",
-        element: <Video />
-      },
-      {
-        path: "profile",
-        element: <Profile />
-      },
-      {
-        path: "about",
-        element: <About />
-      },
-      {
-        path: "login",
-        element: <Login />
-      },
-      {
-        path: 'signup',
-        element: <Signup />
-      },
-      {
-        path: "add-video",
-        element: <AddVideo />
-      },
-      {
-        path: "messages",
-        element: <MessagingPage />
-      },
-      {path: "recruiter-signup",
-      element: <Rsignup />
-    },
-    {
-      path: "recruiter-login",
-      element: <Rlogin />
-    },
-    {
-      path: "recruiter-home",
-      element: <RecruiterHome />
-    }
-    ]
-  }
-]
-
-
-const router = createBrowserRouter(routes)
+      { index: true, element: <Home /> },
+      { path: 'videos', element: withSuspense(<Video />) },
+      { path: 'profile', element: withSuspense(<Profile />) },
+      { path: 'about', element: withSuspense(<About />) },
+      { path: 'login', element: withSuspense(<Login />) },
+      { path: 'signup', element: withSuspense(<Signup />) },
+      { path: 'add-video', element: withSuspense(<AddVideo />) },
+      { path: 'messages', element: withSuspense(<MessagingPage />) },
+      { path: 'recruiter-signup', element: withSuspense(<Rsignup />) },
+      { path: 'recruiter-login', element: withSuspense(<Rlogin />) },
+      { path: 'recruiter-home', element: withSuspense(<RecruiterHome />) },
+    ],
+  },
+])
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router}/>
+    <RouterProvider router={router} />
   </React.StrictMode>,
 )

@@ -1,21 +1,24 @@
-import React from 'react';
-import { useOutletContext} from 'react-router-dom';
+import { Link } from 'react-router-dom'
+import { useAuth } from '../context/auth-context.js'
 
 function RecruiterHome() {
-  const { currentRecruiter, setCurrentRecruiter } = useOutletContext();
+  const { currentRecruiter, logoutRecruiter } = useAuth()
 
-  function handleRecruiterLogout() {
-    setCurrentRecruiter(null);
-    fetch('/api/recruiters', { method: 'DELETE' })
+  if (!currentRecruiter) {
+    return (
+      <div className="page">
+        <p>Please <Link to="/recruiter-login">log in</Link> as a recruiter.</p>
+      </div>
+    )
   }
 
   return (
-    <div>
-      <div></div>
-      <h3>Welcome, {currentRecruiter ? currentRecruiter.recruiter_username : 'Guest'}!</h3>
-      <button onClick={handleRecruiterLogout}>Logout</button>
-    </div>
-  );
+    <section className="page">
+      <h3>Welcome, {currentRecruiter.recruiter_username}!</h3>
+      <p className="muted">{currentRecruiter.recruiter_name}</p>
+      <button type="button" onClick={logoutRecruiter}>Logout</button>
+    </section>
+  )
 }
 
-export default RecruiterHome;
+export default RecruiterHome
