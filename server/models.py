@@ -1,23 +1,44 @@
 """Database models.
 
-Serialization is done with hand-written ``to_dict`` methods rather than
-``SerializerMixin``. The mixin walks relationships recursively, so a single
-``/api/videos`` call would lazy-load every uploader and every like — one extra
-query per row. These methods return exactly the fields the client renders.
+Two things worth knowing:
+
+1. Players and recruiters are one ``User`` table separated by ``role``. They
+   used to be separate tables, which made the product's core action — a scout
+   messaging a player — impossible to express, because both message foreign
+   keys pointed at the players table.
+2. Serialization is hand-written rather than ``SerializerMixin``. The mixin
+   walks relationships recursively, so one ``/api/videos`` call would lazy-load
+   every uploader and every like — an extra query per row.
 """
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from extensions import bcrypt, db
+from games import GAME_NAMES
+
+PLAYER = 'player'
+RECRUITER = 'recruiter'
+ROLES = (PLAYER, RECRUITER)
+
+#: How a clip's video is obtained. ``youtube`` holds an embed id in
+#: ``file_path``; ``upload`` holds an object key in ``storage_key``.
+YOUTUBE = 'youtube'
+UPLOAD = 'upload'
+SOURCES = (YOUTUBE, UPLOAD)
 
 
 class User(db.Model):
     __tablename__ = 'users_table'
 
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String, nullable=False)
-    last_name = db.Column(db.String, nullable=False)
     username = db.Column(db.String, unique=True, nullable=False, index=True)
+    role = db.Column(db.String(20), nullable=False, default=PLAYER, index=True)
     _hashed_password = db.Column(db.String, nullable=False)
+
+    # Players have a name; recruiters have an organization. Each side's fields
+    # are null for the other, which is why neither is required.
+    first_name = db.Column(db.String, nullable=True)
+    last_name = db.Column(db.String, nullable=True)
+    organization = db.Column(db.String, nullable=True)
 
     videos = db.relationship(
         'Video', back_populates='uploader',
@@ -25,10 +46,6 @@ class User(db.Model):
     )
     liked_videos = db.relationship(
         'Like', back_populates='user',
-        cascade='all, delete-orphan',
-    )
-    recruiter_interactions = db.relationship(
-        'UserRecruiter', back_populates='user',
         cascade='all, delete-orphan',
     )
     received_messages = db.relationship(
@@ -51,47 +68,27 @@ class User(db.Model):
     def authenticate(self, plaintext):
         return bcrypt.check_password_hash(self._hashed_password, plaintext)
 
+    @property
+    def is_recruiter(self):
+        return self.role == RECRUITER
+
+    @property
+    def display_name(self):
+        if self.is_recruiter:
+            return self.organization or self.username
+        full = ' '.join(p for p in (self.first_name, self.last_name) if p)
+        return full or self.username
+
     def to_dict(self):
         """Shallow — never includes the password hash or nested collections."""
         return {
             'id': self.id,
             'username': self.username,
+            'role': self.role,
+            'display_name': self.display_name,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'role': 'user',
-        }
-
-
-class Recruiter(db.Model):
-    __tablename__ = 'recruiters_table'
-
-    id = db.Column(db.Integer, primary_key=True)
-    recruiter_name = db.Column(db.String, nullable=False)
-    recruiter_username = db.Column(db.String, unique=True, nullable=False, index=True)
-    _hashed_password = db.Column(db.String, nullable=False)
-
-    interactions = db.relationship(
-        'UserRecruiter', back_populates='recruiter',
-        cascade='all, delete-orphan',
-    )
-
-    @hybrid_property
-    def password(self):
-        raise AttributeError('password is write-only')
-
-    @password.setter
-    def password(self, plaintext):
-        self._hashed_password = bcrypt.generate_password_hash(plaintext).decode('utf-8')
-
-    def authenticate(self, plaintext):
-        return bcrypt.check_password_hash(self._hashed_password, plaintext)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'recruiter_username': self.recruiter_username,
-            'recruiter_name': self.recruiter_name,
-            'role': 'recruiter',
+            'organization': self.organization,
         }
 
 
@@ -101,10 +98,22 @@ class Video(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     time_uploaded = db.Column(db.DateTime, server_default=db.func.now())
-    file_path = db.Column(db.String, nullable=False)
+    # Slug from games.GAMES. Indexed because the feed is always filtered by it.
+    game = db.Column(db.String(40), nullable=False, index=True)
     user_id = db.Column(
         db.Integer, db.ForeignKey('users_table.id'), nullable=False, index=True,
     )
+
+    source = db.Column(db.String(20), nullable=False, default=YOUTUBE)
+    # Set when source is youtube: the bare embed id.
+    file_path = db.Column(db.String, nullable=True)
+    # Set when source is upload: the storage key, plus what we learned from
+    # the file. duration_seconds is null when the container did not say.
+    storage_key = db.Column(db.String, nullable=True)
+    duration_seconds = db.Column(db.Float, nullable=True)
+    size_bytes = db.Column(db.Integer, nullable=True)
+    # sha256 of the uploaded bytes, so the same clip is not stored twice.
+    content_hash = db.Column(db.String(64), nullable=True, index=True)
 
     uploader = db.relationship('User', back_populates='videos')
     likes = db.relationship(
@@ -112,12 +121,28 @@ class Video(db.Model):
         cascade='all, delete-orphan',
     )
 
+    @property
+    def is_upload(self):
+        return self.source == UPLOAD
+
+    def video_url(self):
+        """Playable URL for an uploaded clip, or None for a YouTube embed."""
+        if not self.is_upload or not self.storage_key:
+            return None
+        import storage
+        return storage.get().public_url(self.storage_key)
+
     def to_dict(self, like_count=None):
         """``like_count`` is passed in by the route so we avoid loading the rows."""
         return {
             'id': self.id,
             'title': self.title,
+            'source': self.source,
             'file_path': self.file_path,
+            'video_url': self.video_url(),
+            'duration_seconds': self.duration_seconds,
+            'game': self.game,
+            'game_name': GAME_NAMES.get(self.game, self.game),
             'time_uploaded': self.time_uploaded.isoformat() if self.time_uploaded else None,
             'user_id': self.user_id,
             'uploader': {
@@ -141,33 +166,6 @@ class Like(db.Model):
         return {'user_id': self.user_id, 'video_id': self.video_id}
 
 
-class UserRecruiter(db.Model):
-    __tablename__ = 'users_recruiters_table'
-
-    interaction_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('users_table.id'), nullable=False, index=True,
-    )
-    recruiter_id = db.Column(
-        db.Integer, db.ForeignKey('recruiters_table.id'), nullable=False, index=True,
-    )
-    interaction_type = db.Column(db.String(50), nullable=False)
-
-    user = db.relationship('User', back_populates='recruiter_interactions')
-    recruiter = db.relationship('Recruiter', back_populates='interactions')
-    messages = db.relationship(
-        'Message', back_populates='interaction',
-    )
-
-    def to_dict(self):
-        return {
-            'interaction_id': self.interaction_id,
-            'user_id': self.user_id,
-            'recruiter_id': self.recruiter_id,
-            'interaction_type': self.interaction_type,
-        }
-
-
 class Message(db.Model):
     __tablename__ = 'messages_table'
 
@@ -175,15 +173,13 @@ class Message(db.Model):
     content = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now(), index=True)
 
+    # Both sides are plain users now, so a recruiter messaging a player is
+    # just a row like any other.
     sender_id = db.Column(
         db.Integer, db.ForeignKey('users_table.id'), nullable=False, index=True,
     )
     recipient_id = db.Column(
         db.Integer, db.ForeignKey('users_table.id'), nullable=False, index=True,
-    )
-    interaction_id = db.Column(
-        db.Integer, db.ForeignKey('users_recruiters_table.interaction_id'),
-        nullable=True, index=True,
     )
 
     sender = db.relationship(
@@ -192,7 +188,6 @@ class Message(db.Model):
     recipient = db.relationship(
         'User', foreign_keys=[recipient_id], back_populates='received_messages',
     )
-    interaction = db.relationship('UserRecruiter', back_populates='messages')
 
     def to_dict(self):
         return {
@@ -201,5 +196,4 @@ class Message(db.Model):
             'timestamp': self.timestamp.isoformat() if self.timestamp else None,
             'sender_id': self.sender_id,
             'recipient_id': self.recipient_id,
-            'interaction_id': self.interaction_id,
         }

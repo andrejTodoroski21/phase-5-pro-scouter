@@ -13,6 +13,12 @@ export default defineConfig({
         target: 'http://localhost:5555',
         ws: true,
       },
+      // Locally-stored clip uploads. In production Flask serves these itself,
+      // and with R2 configured they come from the bucket instead.
+      '/media': {
+        target: 'http://localhost:5555',
+        changeOrigin: true,
+      },
     },
   },
   build: {

@@ -11,11 +11,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, send_from_directory
 
+import storage
 from extensions import bcrypt, cors, db, migrate, socketio
 
 load_dotenv()
 
 CLIENT_DIST = (Path(__file__).resolve().parent.parent / 'client' / 'dist')
+MEDIA_ROOT = Path(__file__).resolve().parent / 'media'
 
 
 def create_app(config=None):
@@ -38,6 +40,16 @@ def create_app(config=None):
         SESSION_COOKIE_SAMESITE='Lax',
         PERMANENT_SESSION_LIFETIME=timedelta(days=7),
         JSON_SORT_KEYS=False,
+        MEDIA_ROOT=str(MEDIA_ROOT),
+        # Uploads are capped rather than transcoded: phones and capture tools
+        # already emit H.264 MP4, and constraining the input removes the need
+        # for a transcoding pipeline entirely.
+        MAX_CLIP_BYTES=100 * 1024 * 1024,
+        MAX_CLIP_SECONDS=60,
+        # Flask rejects a larger body outright, with headroom for the rest of
+        # the multipart envelope.
+        MAX_CONTENT_LENGTH=105 * 1024 * 1024,
+        **storage.env_settings(),
     )
     if config:
         app.config.update(config)
@@ -53,6 +65,8 @@ def create_app(config=None):
         supports_credentials=True,
     )
     socketio.init_app(app, cors_allowed_origins=_allowed_origins())
+
+    storage.configure(app)
 
     import models  # noqa: F401  (registers the mapped classes)
     from routes import register_blueprints
@@ -82,6 +96,16 @@ def _allowed_origins():
 
 def _register_spa(app):
     """Serve the built client, with long cache lifetimes on hashed assets."""
+
+    @app.route('/media/<path:key>')
+    def serve_media(key):
+        media_root = Path(app.config['MEDIA_ROOT'])
+        target = (media_root / key).resolve()
+        if not str(target).startswith(str(media_root.resolve())) or not target.is_file():
+            return {'error': 'Not found'}, 404
+        response = send_from_directory(str(media_root), key, conditional=True)
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        return response
 
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')

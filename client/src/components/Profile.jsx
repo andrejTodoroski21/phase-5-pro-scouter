@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../lib/api'
-import LiteYouTube from './LiteYouTube.jsx'
+import ClipPlayer from './ClipPlayer.jsx'
 import { useAuth } from '../context/auth-context.js'
 
 function Profile() {
@@ -50,7 +50,7 @@ function Profile() {
         <div className="video-grid">
           {videos.map((video) => (
             <article className="video-card" key={video.id}>
-              <LiteYouTube videoId={video.file_path} title={video.title} />
+              <ClipPlayer video={video} />
               <p className="video-title">{video.title}</p>
               <button type="button" onClick={() => deleteVideo(video.id)}>Delete</button>
             </article>

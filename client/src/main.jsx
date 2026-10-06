@@ -15,8 +15,6 @@ const Login = lazy(() => import('./components/UserPanel/Login.jsx'))
 const Signup = lazy(() => import('./components/UserPanel/Signup.jsx'))
 const AddVideo = lazy(() => import('./components/AddVideo.jsx'))
 const MessagingPage = lazy(() => import('./components/MessagingPage.jsx'))
-const Rsignup = lazy(() => import('./components/RecruiterPanel/Rsignup.jsx'))
-const Rlogin = lazy(() => import('./components/RecruiterPanel/Rlogin.jsx'))
 const RecruiterHome = lazy(() => import('./components/RecruiterHome.jsx'))
 
 const withSuspense = (element) => (
@@ -36,8 +34,6 @@ const router = createBrowserRouter([
       { path: 'signup', element: withSuspense(<Signup />) },
       { path: 'add-video', element: withSuspense(<AddVideo />) },
       { path: 'messages', element: withSuspense(<MessagingPage />) },
-      { path: 'recruiter-signup', element: withSuspense(<Rsignup />) },
-      { path: 'recruiter-login', element: withSuspense(<Rlogin />) },
       { path: 'recruiter-home', element: withSuspense(<RecruiterHome />) },
     ],
   },

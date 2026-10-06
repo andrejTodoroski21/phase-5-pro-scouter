@@ -436,3 +436,92 @@ input {
     max-height: 40vh;
   }
 }
+
+/* --- role toggle, game filter, select ------------------------------------ */
+
+.role-toggle,
+.game-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-filter {
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.role-toggle button,
+.game-filter button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.78rem;
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.role-toggle button {
+  flex: 1;
+}
+
+.role-toggle button.is-selected,
+.game-filter button.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+select {
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: #000;
+  font: inherit;
+}
+
+/* --- upload --------------------------------------------------------------- */
+
+.upload-hint {
+  font-size: 0.8rem;
+  margin: -0.4rem 0 0;
+}
+
+input[type='file'] {
+  padding: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.upload-progress {
+  position: relative;
+  height: 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.upload-bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.upload-progress span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.video-frame video {
+  width: 100%;
+  height: 100%;
+  background: #000;
+}

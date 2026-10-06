@@ -6,6 +6,9 @@ Flask-Migrate
 Flask-SQLAlchemy
 Flask-Bcrypt
 Flask-SocketIO
+PyJWT
+# S3-compatible client, used for Cloudflare R2
+boto3
 SQLAlchemy>=1.4,<2.1
 python-dotenv
 Faker

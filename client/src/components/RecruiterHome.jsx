@@ -2,21 +2,25 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/auth-context.js'
 
 function RecruiterHome() {
-  const { currentRecruiter, logoutRecruiter } = useAuth()
+  const { currentUser, isRecruiter, logout, loading } = useAuth()
 
-  if (!currentRecruiter) {
+  if (loading) return <p className="muted page">Loading…</p>
+  if (!isRecruiter) {
     return (
       <div className="page">
-        <p>Please <Link to="/recruiter-login">log in</Link> as a recruiter.</p>
+        <p>
+          This page is for recruiter accounts.{' '}
+          {currentUser ? 'You are signed in as a player.' : <Link to="/login">Log in</Link>}
+        </p>
       </div>
     )
   }
 
   return (
     <section className="page">
-      <h3>Welcome, {currentRecruiter.recruiter_username}!</h3>
-      <p className="muted">{currentRecruiter.recruiter_name}</p>
-      <button type="button" onClick={logoutRecruiter}>Logout</button>
+      <h3>Welcome, {currentUser.organization}!</h3>
+      <p className="muted">Signed in as {currentUser.username}</p>
+      <button type="button" onClick={logout}>Logout</button>
     </section>
   )
 }
