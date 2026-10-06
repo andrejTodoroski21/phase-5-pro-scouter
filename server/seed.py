@@ -13,10 +13,34 @@ from models import Like, Message, Recruiter, User, Video
 
 faker = Faker()
 
-# Real, embeddable clip ids so the video pages have something to show.
-CLIP_IDS = [
-    'e-ORhEE9VVg', 'ZyhrYis509A', 'tgbNymZ7vqY', 'VbfpW0pbvaU',
-    '3JZ_D3ELwOQ', 'lTTajzrSkCw', 'kJQP7kiw5Fk', '9bZkp7q19f0',
+# Real gameplay clips, grouped by game. Each id was checked against YouTube's
+# oEmbed endpoint, so they exist and allow embedding.
+#
+# Grouped this way because Video has no `game` column yet. When that column
+# lands, this dict is already the taxonomy and the seed can write it straight in.
+CLIPS_BY_GAME = {
+    'Valorant': [
+        ('gzvpAFBlPHs', 'Valorant 1v5 Sheriff God Ace'),
+        ('cZ60-T8WFAw', 'Vandal ace on Ascent'),
+        ('O0XlJcqZKNY', 'Clean ace, full buy round'),
+        ('HTdWFnpcbzk', 'Fastest gun ace - 1.2s, all headshots'),
+        ('Pt5i1u6FPDQ', 'Kuronami Vandal ace'),
+    ],
+    'Counter-Strike 2': [
+        ('cPdbef-JMws', 'CS2 montage - spray control'),
+    ],
+    'Rocket League': [
+        ('9eOUDbbePII', 'Aerial goal compilation'),
+    ],
+    'Apex Legends': [
+        ('IiJGScfYkYU', 'Final ring clutch, 1v3'),
+    ],
+}
+
+CLIPS = [
+    (clip_id, title, game)
+    for game, clips in CLIPS_BY_GAME.items()
+    for clip_id, title in clips
 ]
 DEMO_PASSWORD = 'password'
 
@@ -50,11 +74,12 @@ def seed():
 
     videos = [
         Video(
-            title=faker.sentence(nb_words=4).rstrip('.'),
-            file_path=random.choice(CLIP_IDS),
+            title=title,
+            file_path=clip_id,
             user_id=random.choice(users).id,
         )
-        for _ in range(20)
+        # Every clip once, so no title is attached to the wrong thumbnail.
+        for clip_id, title, _game in CLIPS
     ]
     db.session.add_all(videos)
     db.session.commit()
@@ -75,7 +100,9 @@ def seed():
     db.session.commit()
 
     print(f'Seeded {len(users)} users, {len(recruiters)} recruiters, '
-          f'{len(videos)} videos. Password for every account: {DEMO_PASSWORD!r}')
+          f'{len(videos)} clips across {len(CLIPS_BY_GAME)} games '
+          f'({", ".join(CLIPS_BY_GAME)}).')
+    print(f'Password for every account: {DEMO_PASSWORD!r}')
     print(f'Try logging in as: {users[0].username}')
 
 
