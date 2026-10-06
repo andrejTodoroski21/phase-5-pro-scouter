@@ -17,6 +17,7 @@ flask-bcrypt = "*"
 psycopg2-binary = "*"
 gunicorn = "*"
 flask-socketio = "*"
+pyjwt = "*"
 
 [dev-packages]
 ipdb = "*"

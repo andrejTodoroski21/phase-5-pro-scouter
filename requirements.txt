@@ -6,6 +6,7 @@ Flask-Migrate
 Flask-SQLAlchemy
 Flask-Bcrypt
 Flask-SocketIO
+PyJWT
 SQLAlchemy>=1.4,<2.1
 python-dotenv
 Faker

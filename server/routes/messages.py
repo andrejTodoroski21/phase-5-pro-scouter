@@ -79,7 +79,6 @@ def create_message(user):
         content=data['content'],
         sender_id=user.id,
         recipient_id=data['recipient_id'],
-        interaction_id=data.get('interaction_id'),
     )
     db.session.add(message)
     db.session.commit()

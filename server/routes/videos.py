@@ -1,15 +1,30 @@
 """Video listing, upload and deletion."""
-from flask import Blueprint, request
-from sqlalchemy import func, select
-from sqlalchemy.orm import joinedload
-
+import games
 from extensions import db
+from flask import Blueprint, request
 from models import Like, Video
 from routes.helpers import json_body, login_required
+from sqlalchemy import func, select
+from sqlalchemy.orm import joinedload
 
 videos_bp = Blueprint('videos', __name__, url_prefix='/api')
 
 MAX_PAGE_SIZE = 50
+
+
+@videos_bp.get('/games')
+def list_games():
+    """The game list with clip counts, for the home screen's game picker.
+
+    One grouped query for the counts rather than one per game.
+    """
+    counts = dict(db.session.execute(
+        select(Video.game, func.count(Video.id)).group_by(Video.game)
+    ).all())
+    return [
+        {**game, 'clip_count': counts.get(game['slug'], 0)}
+        for game in games.GAMES
+    ], 200
 
 
 @videos_bp.get('/videos')
@@ -22,19 +37,25 @@ def list_videos():
     page = max(request.args.get('page', 1, type=int), 1)
     per_page = min(request.args.get('per_page', 12, type=int), MAX_PAGE_SIZE)
     user_id = request.args.get('user_id', type=int)
+    game = request.args.get('game')
+
+    if game and not games.is_valid(game):
+        return {'error': f'Unknown game: {game}'}, 400
 
     query = Video.query.options(joinedload(Video.uploader))
     if user_id:
         query = query.filter(Video.user_id == user_id)
+    if game:
+        query = query.filter(Video.game == game)
 
     pagination = query.order_by(Video.time_uploaded.desc(), Video.id.desc()).paginate(
         page=page, per_page=per_page, error_out=False,
     )
-    videos = pagination.items
-    counts = _like_counts([v.id for v in videos])
+    rows = pagination.items
+    like_counts = _like_counts([v.id for v in rows])
 
     return {
-        'videos': [v.to_dict(like_count=counts.get(v.id, 0)) for v in videos],
+        'videos': [v.to_dict(like_count=like_counts.get(v.id, 0)) for v in rows],
         'page': pagination.page,
         'pages': pagination.pages,
         'total': pagination.total,
@@ -56,14 +77,17 @@ def _like_counts(video_ids):
 @videos_bp.post('/videos')
 @login_required
 def create_video(user):
-    data, error = json_body('title', 'file_path')
+    data, error = json_body('title', 'file_path', 'game')
     if error:
         return error
+    if not games.is_valid(data['game']):
+        return {'error': f"Unknown game: {data['game']}"}, 400
     # Built field by field on purpose — Video(**data) let a client set any
     # column, including id and user_id.
     video = Video(
         title=data['title'],
         file_path=_youtube_id(data['file_path']),
+        game=data['game'],
         user_id=user.id,
     )
     db.session.add(video)
