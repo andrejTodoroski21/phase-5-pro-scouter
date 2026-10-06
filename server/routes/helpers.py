@@ -4,7 +4,7 @@ from functools import wraps
 import tokens
 from extensions import db
 from flask import request, session
-from models import RECRUITER, User
+from models import PLAYER, RECRUITER, User
 
 
 def current_user():
@@ -36,6 +36,23 @@ def recruiter_required(view):
             return {'error': 'Unauthorized'}, 401
         if user.role != RECRUITER:
             return {'error': 'Recruiters only'}, 403
+        return view(*args, user=user, **kwargs)
+    return wrapper
+
+
+def player_required(view):
+    """Only players post clips; recruiters browse and message.
+
+    The navbar already hides the upload link from recruiters, so without this
+    the rule lived only in the UI and the endpoint stayed open.
+    """
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        user = current_user()
+        if user is None:
+            return {'error': 'Unauthorized'}, 401
+        if user.role != PLAYER:
+            return {'error': 'Only player accounts can post clips'}, 403
         return view(*args, user=user, **kwargs)
     return wrapper
 

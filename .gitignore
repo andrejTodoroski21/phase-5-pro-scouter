@@ -63,3 +63,6 @@ __pycache__/
 
 # Build output
 client/dist
+
+# Locally stored clip uploads
+server/media/

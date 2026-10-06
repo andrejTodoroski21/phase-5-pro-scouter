@@ -19,6 +19,12 @@ PLAYER = 'player'
 RECRUITER = 'recruiter'
 ROLES = (PLAYER, RECRUITER)
 
+#: How a clip's video is obtained. ``youtube`` holds an embed id in
+#: ``file_path``; ``upload`` holds an object key in ``storage_key``.
+YOUTUBE = 'youtube'
+UPLOAD = 'upload'
+SOURCES = (YOUTUBE, UPLOAD)
+
 
 class User(db.Model):
     __tablename__ = 'users_table'
@@ -92,12 +98,22 @@ class Video(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     time_uploaded = db.Column(db.DateTime, server_default=db.func.now())
-    file_path = db.Column(db.String, nullable=False)
     # Slug from games.GAMES. Indexed because the feed is always filtered by it.
     game = db.Column(db.String(40), nullable=False, index=True)
     user_id = db.Column(
         db.Integer, db.ForeignKey('users_table.id'), nullable=False, index=True,
     )
+
+    source = db.Column(db.String(20), nullable=False, default=YOUTUBE)
+    # Set when source is youtube: the bare embed id.
+    file_path = db.Column(db.String, nullable=True)
+    # Set when source is upload: the storage key, plus what we learned from
+    # the file. duration_seconds is null when the container did not say.
+    storage_key = db.Column(db.String, nullable=True)
+    duration_seconds = db.Column(db.Float, nullable=True)
+    size_bytes = db.Column(db.Integer, nullable=True)
+    # sha256 of the uploaded bytes, so the same clip is not stored twice.
+    content_hash = db.Column(db.String(64), nullable=True, index=True)
 
     uploader = db.relationship('User', back_populates='videos')
     likes = db.relationship(
@@ -105,12 +121,26 @@ class Video(db.Model):
         cascade='all, delete-orphan',
     )
 
+    @property
+    def is_upload(self):
+        return self.source == UPLOAD
+
+    def video_url(self):
+        """Playable URL for an uploaded clip, or None for a YouTube embed."""
+        if not self.is_upload or not self.storage_key:
+            return None
+        import storage
+        return storage.get().public_url(self.storage_key)
+
     def to_dict(self, like_count=None):
         """``like_count`` is passed in by the route so we avoid loading the rows."""
         return {
             'id': self.id,
             'title': self.title,
+            'source': self.source,
             'file_path': self.file_path,
+            'video_url': self.video_url(),
+            'duration_seconds': self.duration_seconds,
             'game': self.game,
             'game_name': GAME_NAMES.get(self.game, self.game),
             'time_uploaded': self.time_uploaded.isoformat() if self.time_uploaded else None,

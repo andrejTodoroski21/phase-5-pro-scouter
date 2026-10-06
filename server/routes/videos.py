@@ -1,9 +1,14 @@
 """Video listing, upload and deletion."""
+import hashlib
+import uuid
+
 import games
+import mp4
+import storage
 from extensions import db
-from flask import Blueprint, request
-from models import Like, Video
-from routes.helpers import json_body, login_required
+from flask import Blueprint, current_app, request
+from models import UPLOAD, YOUTUBE, Like, Video
+from routes.helpers import json_body, login_required, player_required
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
@@ -75,7 +80,7 @@ def _like_counts(video_ids):
 
 
 @videos_bp.post('/videos')
-@login_required
+@player_required
 def create_video(user):
     data, error = json_body('title', 'file_path', 'game')
     if error:
@@ -88,11 +93,95 @@ def create_video(user):
         title=data['title'],
         file_path=_youtube_id(data['file_path']),
         game=data['game'],
+        source=YOUTUBE,
         user_id=user.id,
     )
     db.session.add(video)
     db.session.commit()
     return video.to_dict(like_count=0), 201
+
+
+@videos_bp.post('/videos/upload')
+@player_required
+def upload_video(user):
+    """Accept a clip file and create the video row in one request.
+
+    Validation order matters: cheap checks first, so a 200 MB file is rejected
+    on its size before anything parses or uploads it.
+    """
+    uploaded = request.files.get('file')
+    if uploaded is None or not uploaded.filename:
+        return {'error': 'Missing required fields: file'}, 400
+
+    title = (request.form.get('title') or '').strip()
+    game = (request.form.get('game') or '').strip()
+    if not title or not game:
+        missing = [n for n, v in (('title', title), ('game', game)) if not v]
+        return {'error': f"Missing required fields: {', '.join(missing)}"}, 400
+    if not games.is_valid(game):
+        return {'error': f'Unknown game: {game}'}, 400
+
+    stream = uploaded.stream
+    size = _stream_size(stream)
+    max_bytes = current_app.config['MAX_CLIP_BYTES']
+    if size == 0:
+        return {'error': 'That file is empty'}, 400
+    if size > max_bytes:
+        return {
+            'error': f'Clip is {size // (1024 * 1024)} MB; the limit is '
+                     f'{max_bytes // (1024 * 1024)} MB'
+        }, 413
+
+    try:
+        info = mp4.inspect(stream)
+    except mp4.NotAnMp4 as exc:
+        return {'error': f'Only MP4 video is accepted ({exc})'}, 415
+
+    max_seconds = current_app.config['MAX_CLIP_SECONDS']
+    duration = info['duration']
+    if duration is not None and duration > max_seconds:
+        return {
+            'error': f'Clip is {duration:.0f}s; the limit is {max_seconds}s'
+        }, 400
+
+    digest = _sha256(stream)
+    existing = Video.query.filter_by(content_hash=digest, user_id=user.id).first()
+    if existing:
+        return {'error': 'You have already uploaded this clip'}, 409
+
+    key = f'clips/{digest[:12]}-{uuid.uuid4().hex[:8]}.mp4'
+    stream.seek(0)
+    storage.get().save(key, stream, content_type='video/mp4')
+
+    video = Video(
+        title=title,
+        game=game,
+        source=UPLOAD,
+        storage_key=key,
+        duration_seconds=duration,
+        size_bytes=size,
+        content_hash=digest,
+        user_id=user.id,
+    )
+    db.session.add(video)
+    db.session.commit()
+    return video.to_dict(like_count=0), 201
+
+
+def _stream_size(stream):
+    stream.seek(0, 2)
+    size = stream.tell()
+    stream.seek(0)
+    return size
+
+
+def _sha256(stream):
+    stream.seek(0)
+    digest = hashlib.sha256()
+    while chunk := stream.read(1024 * 256):
+        digest.update(chunk)
+    stream.seek(0)
+    return digest.hexdigest()
 
 
 @videos_bp.delete('/videos/<int:video_id>')
@@ -103,6 +192,10 @@ def delete_video(video_id, user):
         return {'error': 'Video not found'}, 404
     if video.user_id != user.id:
         return {'error': 'You are not authorized to delete this video'}, 403
+    # Drop the stored object first; a row pointing at a missing file is better
+    # than an orphaned file nothing references.
+    if video.is_upload and video.storage_key:
+        storage.get().delete(video.storage_key)
     db.session.delete(video)
     db.session.commit()
     return {}, 204

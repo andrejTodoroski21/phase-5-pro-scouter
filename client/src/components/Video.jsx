@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import api from '../lib/api'
-import LiteYouTube from './LiteYouTube.jsx'
+import ClipPlayer from './ClipPlayer.jsx'
 
 const Video = () => {
   const [videos, setVideos] = useState([])
@@ -74,7 +74,7 @@ const Video = () => {
       <div className="video-grid">
         {videos.map((video) => (
           <article className="video-card" key={video.id}>
-            <LiteYouTube videoId={video.file_path} title={video.title} />
+            <ClipPlayer video={video} />
             <p className="video-title">{video.title}</p>
             <p className="video-meta">
               {video.game_name} · by {video.uploader?.username ?? 'unknown'} · {video.like_count} likes
